@@ -1,0 +1,210 @@
+{% extends "lms_portal/www/base.html" %}
+
+{% block title %}{{ book.title }} | LMS Elite{% endblock %}
+
+{% block head_css %}
+<style>
+    /* --- LAYOUT --- */
+    .book-page {
+        max-width: 1200px; margin: 50px auto 100px; padding: 0 30px;
+        display: grid; grid-template-columns: 400px 1fr; gap: 60px;
+    }
+
+    /* --- LEFT: COVER --- */
+    .view-cover-wrap {
+        position: relative; border-radius: 20px; overflow: hidden;
+        box-shadow: 0 30px 60px rgba(0,0,0,0.2); border: 1px solid var(--border-color);
+        background: white; aspect-ratio: 2/3;
+    }
+    .view-cover { width: 100%; height: 100%; object-fit: cover; }
+    
+    .status-badge {
+        position: absolute; top: 20px; right: 20px; padding: 8px 20px;
+        border-radius: 50px; font-weight: 800; text-transform: uppercase; color: white;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.3); backdrop-filter: blur(5px);
+    }
+    .bg-Available { background: #10B981; }
+    .bg-Borrowed { background: #F59E0B; }
+
+    /* --- RIGHT: INFO --- */
+    .info-sec { display: flex; flex-direction: column; justify-content: center; }
+    
+    .v-cat { color: var(--brand-color); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
+    
+    .v-title { font-size: 3rem; font-weight: 900; line-height: 1.1; margin-bottom: 15px; color: var(--text-main); }
+    .v-auth { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 30px; }
+    
+    .v-rating { color: #FACC15; font-size: 1.2rem; margin-bottom: 30px; }
+
+    .v-desc { font-size: 1.1rem; line-height: 1.8; color: var(--text-main); opacity: 0.9; margin-bottom: 40px; }
+
+    /* --- ACTION BOX --- */
+    .action-box {
+        background: var(--bg-surface); border: 1px solid var(--border-color);
+        padding: 30px; border-radius: 20px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .price-tag { font-size: 2rem; font-weight: 900; color: var(--text-main); }
+    .price-lbl { font-size: 0.9rem; color: var(--text-muted); }
+
+    .btn-main {
+        padding: 18px 40px; border-radius: 12px; font-weight: 800; font-size: 1.1rem;
+        border: none; cursor: pointer; transition: 0.3s; color: white;
+    }
+    .btn-borrow { background: var(--brand-color); box-shadow: 0 10px 30px rgba(37, 99, 235, 0.4); }
+    .btn-borrow:hover { transform: translateY(-5px); box-shadow: 0 20px 50px rgba(37, 99, 235, 0.5); }
+    
+    .btn-reserve { background: #F59E0B; box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4); }
+
+    /* --- MODAL (Reused Style) --- */
+    .backdrop { position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+    .backdrop.visible { display: flex; }
+    .modal-win { background: var(--bg-surface); padding: 40px; border-radius: 24px; width: 100%; max-width: 400px; text-align: center; border: 1px solid var(--border-color); }
+    .otp-inp { width: 100%; padding: 20px; font-size: 2rem; text-align: center; letter-spacing: 10px; margin: 20px 0; border-radius: 12px; border: 2px solid var(--border-color); background: var(--bg-body); color: var(--text-main); }
+
+    @media (max-width: 900px) { .book-page { grid-template-columns: 1fr; } .view-cover-wrap { max-width: 400px; margin: 0 auto; } }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="book-page">
+    <div class="view-cover-wrap">
+        <img src="{{ book.cover_image or 'https://via.placeholder.com/600x900' }}" class="view-cover">
+        <span class="status-badge bg-{{ book.status }}">{{ book.status }}</span>
+    </div>
+
+    <div class="info-sec">
+        <div class="v-cat">{{ book.category }}</div>
+        
+        <div class="v-title lang-en">{{ book.title }}</div>
+        <div class="v-title lang-ar" style="display:none">{{ book.title_ar }}</div>
+        
+        <div class="v-auth lang-en">By {{ book.author }}</div>
+        <div class="v-auth lang-ar" style="display:none">تأليف: {{ book.author_ar }}</div>
+
+        <div class="v-rating">
+            {% for i in range(5) %}
+                {% if i < book.rating|int %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+            {% endfor %}
+            <span style="color:var(--text-muted); font-size:0.9rem; margin-left:10px;">{{ book.rating }} / 5.0</span>
+        </div>
+
+        <div class="v-desc lang-en">{{ book.description }}</div>
+        <div class="v-desc lang-ar" style="display:none">{{ book.description_ar }}</div>
+
+        <div class="action-box">
+            <div>
+                <div class="price-lbl" data-i18n="lbl_rent">Rental Price</div>
+                <div class="price-tag">{{ book.rental_price | int }} <span style="font-size:1rem">EGP</span></div>
+            </div>
+
+            {% if book.status == "Available" %}
+                <button class="btn-main btn-borrow" onclick="BookApp.startBorrow()">
+                    <span data-i18n="btn_borrow">Borrow Now</span>
+                </button>
+            {% else %}
+                <button class="btn-main btn-reserve">
+                    <span data-i18n="btn_reserve">Join Queue</span>
+                </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="backdrop" id="otpModal">
+    <div class="modal-win">
+        <h3 data-i18n="mod_title">Confirm Borrowing</h3>
+        <p style="color:var(--text-muted)" data-i18n="mod_desc">Enter OTP sent to your email.</p>
+        <input type="text" id="otpInput" class="otp-inp" maxlength="6" placeholder="000000">
+        <button class="btn-main btn-borrow" style="width:100%" onclick="BookApp.confirm()" id="btnConf">
+            <span data-i18n="btn_conf">Confirm</span>
+        </button>
+        <div style="margin-top:15px; cursor:pointer; color:var(--text-muted)" onclick="BookApp.close()">Close</div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+    const BookApp = {
+        bookName: "{{ book.name }}",
+        
+        dict: {
+            'en': { 'lbl_rent': 'Rental Price', 'btn_borrow': 'Borrow Now', 'btn_reserve': 'Join Queue', 'mod_title': 'Confirm Borrowing', 'mod_desc': 'Enter OTP sent to email', 'btn_conf': 'Confirm' },
+            'ar': { 'lbl_rent': 'سعر الاستعارة', 'btn_borrow': 'استعر الآن', 'btn_reserve': 'انضم للطابور', 'mod_title': 'تأكيد الاستعارة', 'mod_desc': 'أدخل الرمز المرسل للبريد', 'btn_conf': 'تأكيد' }
+        },
+
+        init() {
+            this.updateLang();
+            window.addEventListener('lms-ui-update', () => this.updateLang());
+        },
+
+        updateLang() {
+            const lang = localStorage.getItem('lms_lang') || 'en';
+            const texts = this.dict[lang];
+            
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if(texts[key]) el.innerText = texts[key];
+            });
+
+            if(lang==='ar') {
+                document.querySelectorAll('.lang-en').forEach(e=>e.style.display='none');
+                document.querySelectorAll('.lang-ar').forEach(e=>e.style.display='block');
+            } else {
+                document.querySelectorAll('.lang-ar').forEach(e=>e.style.display='none');
+                document.querySelectorAll('.lang-en').forEach(e=>e.style.display='block');
+            }
+        },
+
+        async startBorrow() {
+            const btn = document.querySelector('.btn-borrow');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            try {
+                const res = await fetch('/api/method/lms_portal.www.book_view.initiate_borrow', {
+                    method: 'POST',
+                    headers: { 'X-Frappe-CSRF-Token': "{{ frappe.session.csrf_token }}" },
+                    body: new URLSearchParams({ book_name: this.bookName })
+                });
+                
+                if(res.ok) {
+                    document.getElementById('otpModal').classList.add('visible');
+                } else { alert('Error sending OTP'); }
+            } catch(e) {}
+            
+            btn.innerHTML = '<span data-i18n="btn_borrow">Borrow Now</span>';
+            this.updateLang();
+        },
+
+        async confirm() {
+            const otp = document.getElementById('otpInput').value;
+            if(otp.length < 6) return;
+            
+            const btn = document.getElementById('btnConf');
+            btn.innerHTML = '...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('otp', otp);
+                
+                const res = await fetch('/api/method/lms_portal.www.book_view.confirm_borrow', {
+                    method: 'POST',
+                    headers: { 'X-Frappe-CSRF-Token': "{{ frappe.session.csrf_token }}" },
+                    body: formData
+                });
+                
+                if(res.ok) {
+                    alert('Success!');
+                    location.reload();
+                } else { alert('Invalid OTP'); }
+            } catch(e) {}
+            btn.innerHTML = 'Confirm';
+        },
+
+        close() { document.getElementById('otpModal').classList.remove('visible'); }
+    };
+    BookApp.init();
+</script>
+{% endblock %}

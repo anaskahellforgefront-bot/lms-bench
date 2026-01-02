@@ -1,0 +1,461 @@
+{% extends "lms_portal/www/base.html" %}
+
+{% block title %}Membership Plans | LMS Elite{% endblock %}
+
+{% block head_css %}
+<style>
+    /* --- 1. HERO SLIDER (LUXURY EDITION) --- */
+    .hero-wrapper {
+        position: relative; height: 700px; width: 100%; overflow: hidden;
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        text-align: center; color: white; padding-bottom: 140px;
+        background: #0F172A; /* Fallback color */
+    }
+
+    .slide-bg {
+        position: absolute; inset: 0; background-size: cover; background-position: center;
+        opacity: 0; transform: scale(1); animation: zoomFade 20s infinite; z-index: 0;
+    }
+    
+    /* NEW IMAGES: Abstract, High-Tech, Architectural */
+    .slide-1 { 
+        background-image: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2000&auto=format&fit=crop'); 
+        animation-delay: 0s; 
+    }
+    .slide-2 { 
+        background-image: url('https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2000&auto=format&fit=crop'); 
+        animation-delay: 6s; 
+    }
+    .slide-3 { 
+        background-image: url('https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2000&auto=format&fit=crop'); 
+        animation-delay: 13s; 
+    }
+
+    @keyframes zoomFade {
+        0% { opacity: 0; transform: scale(1); }
+        10% { opacity: 1; }
+        30% { opacity: 1; transform: scale(1.1); }
+        40% { opacity: 0; }
+        100% { opacity: 0; }
+    }
+
+    /* Cinematic Overlay */
+    .hero-overlay {
+        position: absolute; inset: 0; z-index: 1;
+        background: radial-gradient(circle at center, rgba(15, 23, 42, 0.4) 0%, #0F172A 100%);
+    }
+
+    .hero-content {
+        position: relative; z-index: 2; max-width: 900px; padding: 0 20px;
+        animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1); margin-top: -50px;
+    }
+
+    .hero-pill {
+        display: inline-flex; align-items: center; gap: 10px;
+        padding: 8px 20px; border-radius: 50px;
+        background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+        backdrop-filter: blur(10px); color: #E2E8F0;
+        font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.75rem;
+        margin-bottom: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .hero-pill::before { content:''; width:8px; height:8px; background:#22C55E; border-radius:50%; box-shadow: 0 0 10px #22C55E; }
+
+    .hero-title {
+        font-size: 4.5rem; font-weight: 900; line-height: 1.05; margin-bottom: 25px;
+        background: linear-gradient(to bottom, #FFFFFF 30%, #94A3B8 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    
+    .hero-desc {
+        font-size: 1.25rem; line-height: 1.6; color: #CBD5E1;
+        max-width: 600px; margin: 0 auto; font-weight: 400;
+    }
+
+    @media (max-width: 768px) { .hero-title { font-size: 2.8rem; } }
+
+    /* --- 2. CARDS SECTION --- */
+    .cards-section { position: relative; z-index: 10; margin-top: -160px; padding-bottom: 100px; }
+
+    .plans-grid {
+        max-width: 1300px; margin: 0 auto; padding: 0 24px;
+        display: grid; grid-template-columns: repeat(3, 1fr);
+        gap: 40px; align-items: stretch;
+    }
+
+    /* --- DYNAMIC CARD DESIGN --- */
+    .elite-card {
+        /* CSS Variables will be set inline by Jinja */
+        --theme-color: #64748B; 
+        
+        background: var(--bg-surface); 
+        border: 1px solid var(--border-color);
+        border-top: 4px solid var(--theme-color); /* Top Accent */
+        border-radius: 24px; padding: 0; display: flex; flex-direction: column;
+        transition: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        position: relative; overflow: hidden; 
+        box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1);
+    }
+    
+    .elite-card:hover { 
+        transform: translateY(-15px); 
+        box-shadow: 0 30px 60px -15px rgba(0,0,0,0.15), 0 0 0 2px var(--theme-color); /* Glow Border */
+    }
+
+    /* Featured Card Logic */
+    .elite-card.featured {
+        transform: scale(1.08); z-index: 20; 
+        box-shadow: 0 40px 80px -20px rgba(0,0,0,0.3);
+        border-top-width: 6px;
+    }
+    .elite-card.featured:hover { transform: scale(1.08) translateY(-10px); }
+
+    /* Ribbon */
+    .feat-ribbon {
+        position: absolute; top: 15px; right: -30px; width: 120px;
+        background: var(--theme-color); color: white; transform: rotate(45deg);
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 0.7rem; text-transform: uppercase; padding: 5px 0;
+        box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+    }
+
+    /* Content Styling */
+    .card-head { padding: 50px 30px 20px; text-align: center; }
+    
+    .tier-badge {
+        display: inline-block; padding: 6px 14px; border-radius: 8px;
+        background: rgba(0,0,0,0.05); color: var(--theme-color);
+        font-weight: 800; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px;
+        margin-bottom: 15px;
+    }
+
+    .c-price { font-size: 3.8rem; font-weight: 900; color: var(--text-main); line-height: 1; display: flex; justify-content: center; align-items: flex-start; gap: 4px; }
+    .c-curr { font-size: 1rem; font-weight: 600; margin-top: 8px; color: var(--text-muted); }
+    .c-desc { font-size: 0.95rem; color: var(--text-muted); margin-top: 20px; min-height: 45px; line-height: 1.5; }
+
+    .card-body { padding: 20px 30px 40px; flex: 1; }
+    .feat-ul { padding: 0; margin: 0; list-style: none; }
+    .feat-ul li { margin-bottom: 16px; display: flex; align-items: center; gap: 12px; font-size: 1rem; color: var(--text-main); }
+    
+    /* Dynamic Checkmark Color */
+    .feat-ul li::before {
+        content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+        width: 20px; height: 20px; color: var(--theme-color); 
+        display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0;
+    }
+
+    .card-foot { padding: 0 30px 40px; }
+    
+    .btn-card {
+        width: 100%; padding: 18px; border-radius: 14px;
+        font-weight: 800; font-size: 1rem; border: none; cursor: pointer;
+        transition: 0.3s; 
+        background: var(--bg-body); color: var(--text-main); border: 2px solid var(--border-color);
+    }
+    
+    /* Dynamic Hover Button */
+    .btn-card:hover { 
+        background: var(--theme-color); color: white; border-color: var(--theme-color);
+        box-shadow: 0 10px 25px -5px var(--theme-color);
+    }
+
+    /* Featured Button (Filled by Default) */
+    .btn-card.filled {
+        background: var(--theme-color); color: white; border: none;
+        box-shadow: 0 10px 20px -5px rgba(0,0,0,0.2);
+    }
+    .btn-card.filled:hover { filter: brightness(1.1); transform: translateY(-2px); }
+
+    .btn-card.active { background: #10B981; color: white; border: none; cursor: default; opacity: 1; }
+
+    @media (max-width: 1024px) { .plans-grid { grid-template-columns: repeat(2, 1fr); gap: 30px; } }
+    @media (max-width: 768px) { .plans-grid { grid-template-columns: 1fr; gap: 60px; } .elite-card.featured { transform: scale(1); } .hero-wrapper { height: 600px; } }
+
+    /* --- 3. MODALS (PROFESSIONAL) --- */
+    .backdrop {
+        position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
+        display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s;
+    }
+    .backdrop.visible { display: flex; opacity: 1; }
+
+    .modal-win {
+        background: var(--bg-surface); padding: 50px; border-radius: 24px; width: 100%; max-width: 450px;
+        text-align: center; box-shadow: 0 30px 80px rgba(0,0,0,0.5); border: 1px solid var(--border-color);
+        transform: scale(0.95); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .backdrop.visible .modal-win { transform: scale(1); }
+
+    .m-icon {
+        width: 80px; height: 80px; margin: 0 auto 25px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; font-size: 2.2rem;
+    }
+    .i-otp { background: rgba(245, 158, 11, 0.1); color: #F59E0B; } /* Gold for Money */
+    .i-success { background: rgba(16, 185, 129, 0.1); color: #10B981; }
+
+    /* PRICE DISPLAY IN MODAL */
+    .pay-amount {
+        margin: 20px 0; padding: 15px; background: var(--bg-body); border-radius: 12px;
+        font-size: 1.1rem; color: var(--text-main); border: 1px solid var(--border-color);
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .pay-val { font-weight: 900; font-size: 1.3rem; color: var(--text-main); }
+
+    .otp-box {
+        width: 100%; padding: 20px; border: 2px solid var(--border-color); border-radius: 14px;
+        background: var(--bg-body); color: var(--text-main); font-size: 2.2rem; font-weight: 800;
+        letter-spacing: 10px; text-align: center; margin-bottom: 20px; outline: none; transition: 0.3s;
+    }
+    .otp-box:focus { border-color: #F59E0B; box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1); }
+
+    .otp-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; font-size: 0.9rem; color: var(--text-muted); }
+    .resend-link { color: var(--brand-color); font-weight: 700; cursor: pointer; }
+    .resend-link.disabled { opacity: 0.5; cursor: default; }
+
+    @keyframes fadeInUp { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="hero-wrapper">
+    <div class="slide-bg slide-1"></div>
+    <div class="slide-bg slide-2"></div>
+    <div class="slide-bg slide-3"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <div class="hero-pill" data-i18n="hero_pill">LMS Elite Membership</div>
+        <h1 class="hero-title lang-en">Unlock The<br>Extraordinary.</h1>
+        <h1 class="hero-title lang-ar" style="display:none;">أطلق العنان<br>للاستثنائي.</h1>
+        <p class="hero-desc lang-en">Experience a world of knowledge without boundaries. Select the tier that defines your ambition.</p>
+        <p class="hero-desc lang-ar" style="display:none;">اكتشف عالماً من المعرفة بلا حدود. اختر المستوى الذي يعكس طموحك.</p>
+    </div>
+</div>
+
+<div class="cards-section">
+    <div class="plans-grid">
+        {% for plan in plans %}
+        <div class="elite-card {% if plan.is_featured %}featured{% endif %}" style="--theme-color: {{ plan.badge_color or '#64748B' }};">
+            
+            {% if plan.is_featured %}
+            <div class="feat-ribbon" data-i18n="ribbon_pop">Most Popular</div>
+            {% endif %}
+
+            <div class="card-head">
+                <div class="tier-badge">
+                    <span class="lang-en">{{ plan.tier_name }}</span>
+                    <span class="lang-ar" style="display:none;">{{ plan.tier_name_ar }}</span>
+                </div>
+                
+                <div class="c-price">
+                    <span class="c-curr">{{ plan.currency }}</span> {{ plan.price | int }}
+                </div>
+                
+                <div class="c-desc">
+                    <span class="lang-en">{{ plan.description_en }}</span>
+                    <span class="lang-ar" style="display:none;">{{ plan.description_ar }}</span>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <ul class="feat-ul">
+                    <div class="lang-en">{{ plan.features_en }}</div>
+                    <div class="lang-ar" style="display:none;">{{ plan.features_ar }}</div>
+                </ul>
+            </div>
+
+            <div class="card-foot">
+                {% if current_plan == plan.name %}
+                    <button class="btn-card active"><i class="fas fa-check-circle"></i> <span data-i18n="btn_curr">Current Plan</span></button>
+                {% else %}
+                    <button class="btn-card {% if plan.is_featured %}filled{% endif %}" onclick="PaymentApp.start('{{ plan.name }}', {{ plan.price }})">
+                        <span data-i18n="btn_up">Upgrade Now</span>
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="backdrop" id="modOTP">
+    <div class="modal-win">
+        <div class="m-icon i-otp"><i class="fas fa-shield-alt"></i></div>
+        <h3 data-i18n="mod_otp_title" style="font-weight: 800; font-size: 1.6rem; margin-bottom: 5px;">Verify Payment</h3>
+        <p style="color:var(--text-muted); margin-bottom: 20px;" data-i18n="mod_otp_text">Secure Transaction</p>
+        
+        <div class="pay-amount">
+            <span data-i18n="lbl_total">Total Amount:</span>
+            <span class="pay-val" id="displayAmount">0 EGP</span>
+        </div>
+
+        <input type="text" id="otpIn" class="otp-box" placeholder="000000" maxlength="6">
+        
+        <div class="otp-meta">
+            <span><i class="far fa-clock"></i> <span id="timer">01:00</span></span>
+            <a onclick="PaymentApp.resendCode()" id="resendBtn" class="resend-link disabled" data-i18n="lnk_resend">Resend Code</a>
+        </div>
+
+        <button class="btn-card filled" style="background: #F59E0B; border:none; color:white;" onclick="PaymentApp.verify()" id="btnPay">
+            <span data-i18n="btn_pay">Confirm Payment</span>
+        </button>
+        <div style="margin-top:20px; color:var(--text-muted); cursor:pointer;" onclick="PaymentApp.close()"><span data-i18n="btn_close">Cancel Transaction</span></div>
+    </div>
+</div>
+
+<div class="backdrop" id="modSuccess">
+    <div class="modal-win">
+        <div class="m-icon i-success"><i class="fas fa-check"></i></div>
+        <h3 data-i18n="mod_ok_title" style="font-weight: 800; margin-bottom: 10px;">Upgrade Complete!</h3>
+        <p style="color:var(--text-muted); margin-bottom:30px;" data-i18n="mod_ok_text">Welcome to the elite circle.</p>
+        <button class="btn-card active" onclick="location.reload()"><span data-i18n="btn_cool">Continue</span></button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+    const PaymentApp = {
+        target: null,
+        currentPrice: 0,
+        timerInterval: null,
+        timeLeft: 60,
+
+        dict: {
+            'en': {
+                'hero_pill': 'LMS Elite Membership', 'ribbon_pop': 'Most Popular', 'btn_curr': 'Active Plan', 'btn_up': 'Upgrade Now',
+                'mod_otp_title': 'Verify Payment', 'mod_otp_text': 'Enter the 6-digit code sent to your email.', 'btn_pay': 'Confirm Payment', 'btn_close': 'Cancel Transaction',
+                'mod_ok_title': 'Upgrade Complete!', 'mod_ok_text': 'Welcome to the elite circle.', 'btn_cool': 'Continue',
+                'lnk_resend': 'Resend Code', 'lbl_total': 'Total Amount:'
+            },
+            'ar': {
+                'hero_pill': 'عضويات النخبة', 'ribbon_pop': 'الأكثر طلباً', 'btn_curr': 'الخطة الحالية', 'btn_up': 'رقِّ الآن',
+                'mod_otp_title': 'تأكيد الدفع', 'mod_otp_text': 'أدخل الرمز المكون من 6 أرقام.', 'btn_pay': 'تأكيد الدفع', 'btn_close': 'إلغاء العملية',
+                'mod_ok_title': 'تمت الترقية!', 'mod_ok_text': 'مرحباً بك في دائرة النخبة.', 'btn_cool': 'متابعة',
+                'lnk_resend': 'إعادة الإرسال', 'lbl_total': 'المبلغ الإجمالي:'
+            }
+        },
+
+        init() {
+            this.updateLang();
+            window.addEventListener('lms-ui-update', () => this.updateLang());
+        },
+
+        updateLang() {
+            const lang = localStorage.getItem('lms_lang') || 'en';
+            const texts = this.dict[lang];
+            
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if(texts[key]) el.innerText = texts[key];
+            });
+
+            if (lang === 'ar') {
+                document.querySelectorAll('.lang-en').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.lang-ar').forEach(el => el.style.display = 'block');
+            } else {
+                document.querySelectorAll('.lang-ar').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.lang-en').forEach(el => el.style.display = 'block');
+            }
+        },
+
+        // --- ACTIONS ---
+        async start(plan, price) {
+            if ("{{ frappe.session.user }}" === "Guest") { window.location.href = "/sign_in"; return; }
+            
+            // Set Data
+            this.target = plan;
+            this.currentPrice = price;
+            
+            // Update Modal UI with Price
+            document.getElementById('displayAmount').innerText = `${price} EGP`;
+            
+            // Trigger Send Code immediately (Skip Confirmation step as per modern UX)
+            await this.sendCode();
+        },
+
+        async sendCode() {
+            // Show global loading if needed, or just open modal in loading state
+            try {
+                const response = await fetch('/api/method/lms_portal.www.memberships.initiate_payment', {
+                    method: 'POST',
+                    headers: { 'X-Frappe-CSRF-Token': "{{ frappe.session.csrf_token }}" },
+                    body: new URLSearchParams({ plan_name: this.target })
+                });
+
+                if(response.ok) {
+                    this.open('modOTP');
+                    document.getElementById('otpIn').value = '';
+                    document.getElementById('otpIn').focus();
+                    this.startTimer();
+                } else { alert('Error sending code'); }
+            } catch(e) { console.error(e); }
+        },
+
+        async resendCode() {
+            if(this.timeLeft > 0) return; 
+            const lnk = document.getElementById('resendBtn');
+            lnk.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            await this.sendCode();
+            this.updateLang(); 
+        },
+
+        async verify() {
+            const otp = document.getElementById('otpIn').value;
+            if(otp.length < 6) return;
+
+            const btn = document.getElementById('btnPay');
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Processing'; btn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('otp', otp);
+
+                const response = await fetch('/api/method/lms_portal.www.memberships.verify_payment', {
+                    method: 'POST',
+                    headers: { 'X-Frappe-CSRF-Token': "{{ frappe.session.csrf_token }}" },
+                    body: formData
+                });
+
+                if(response.ok) {
+                    this.close();
+                    this.open('modSuccess');
+                } else { alert('Invalid Code'); }
+            } catch(e) { alert('Failed'); }
+
+            btn.disabled = false; btn.innerHTML = original;
+        },
+
+        // --- TIMER ---
+        startTimer() {
+            this.timeLeft = 60;
+            this.updateTimerUI();
+            document.getElementById('resendBtn').classList.add('disabled');
+            if(this.timerInterval) clearInterval(this.timerInterval);
+            this.timerInterval = setInterval(() => {
+                this.timeLeft--;
+                this.updateTimerUI();
+                if(this.timeLeft <= 0) {
+                    clearInterval(this.timerInterval);
+                    document.getElementById('resendBtn').classList.remove('disabled');
+                }
+            }, 1000);
+        },
+
+        updateTimerUI() {
+            const m = Math.floor(this.timeLeft / 60);
+            const s = this.timeLeft % 60;
+            document.getElementById('timer').innerText = `0${m}:${s < 10 ? '0'+s : s}`;
+        },
+
+        open(id) { document.getElementById(id).classList.add('visible'); },
+        close() { 
+            document.querySelectorAll('.backdrop').forEach(m => m.classList.remove('visible')); 
+            if(this.timerInterval) clearInterval(this.timerInterval);
+        }
+    };
+
+    PaymentApp.init();
+</script>
+{% endblock %}

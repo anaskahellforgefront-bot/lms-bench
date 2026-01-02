@@ -1,0 +1,521 @@
+{% extends "lms_portal/www/base.html" %}
+
+{% block title %}Dashboard | LMS Elite{% endblock %}
+
+{% block head_css %}
+<style>
+    /* --- LAYOUT --- */
+    .dash-layout {
+        max-width: 1400px; margin: 40px auto 100px; padding: 0 30px;
+        display: grid; grid-template-columns: 320px 1fr; gap: 40px; align-items: start;
+    }
+
+    /* --- SIDEBAR (STICKY FIXED) --- */
+    .dash-sidebar {
+        position: sticky; top: 100px; align-self: start;
+        background: var(--bg-surface); border: 1px solid var(--border-color);
+        border-radius: 24px; padding: 30px; box-shadow: var(--shadow-sm);
+        text-align: center;
+    }
+    .user-img {
+        width: 110px; height: 110px; border-radius: 50%; object-fit: cover; margin: 0 auto 15px;
+        border: 4px solid var(--bg-body); box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .user-initials {
+        width: 110px; height: 110px; border-radius: 50%; margin: 0 auto 15px;
+        background: linear-gradient(135deg, #2563EB, #4F46E5); color: white;
+        display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 900;
+    }
+    
+    .u-name { font-size: 1.4rem; font-weight: 800; color: var(--text-main); margin-bottom: 5px; }
+    .u-tier { 
+        display: inline-block; padding: 5px 12px; background: rgba(250, 204, 21, 0.15); 
+        color: #ca8a04; border-radius: 20px; font-weight: 800; font-size: 0.75rem; 
+        text-transform: uppercase; margin-bottom: 25px; 
+    }
+
+    .usage-box { text-align: left; margin-bottom: 25px; }
+    .ub-head { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; }
+    .progress-bg { height: 8px; background: var(--bg-body); border-radius: 10px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--brand-color); border-radius: 10px; transition: width 1s ease; }
+
+    /* Menu */
+    .d-menu { list-style: none; padding: 0; margin: 0; text-align: left; }
+    .d-item {
+        padding: 14px 15px; border-radius: 12px; cursor: pointer; transition: 0.2s;
+        display: flex; align-items: center; gap: 12px; color: var(--text-muted); font-weight: 600;
+    }
+    .d-item:hover, .d-item.active { background: var(--bg-body); color: var(--brand-color); }
+    .d-item i { width: 25px; text-align: center; }
+
+    /* --- CONTENT --- */
+    .tab-content { display: none; animation: fadeIn 0.4s ease-out; }
+    .tab-content.active { display: block; }
+    
+    .sec-head { font-size: 1.8rem; font-weight: 900; margin-bottom: 25px; color: var(--text-main); }
+
+    /* Grid for Loans/Queue */
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px; }
+    
+    .d-card {
+        background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 16px;
+        padding: 20px; display: flex; gap: 15px; cursor: pointer; transition: 0.3s;
+        position: relative; overflow: hidden;
+    }
+    .d-card:hover { transform: translateY(-5px); border-color: var(--brand-color); box-shadow: 0 15px 30px rgba(0,0,0,0.05); }
+    
+    .dc-img { width: 70px; height: 100px; object-fit: cover; border-radius: 8px; background: #eee; flex-shrink: 0; }
+    .dc-info { display: flex; flex-direction: column; flex: 1; }
+    .dc-title { font-weight: 800; font-size: 1rem; margin-bottom: 5px; line-height: 1.3; }
+    .dc-sub { font-size: 0.85rem; color: var(--text-muted); margin-bottom: auto; }
+    
+    .dc-tag {
+        align-self: flex-start; padding: 4px 10px; border-radius: 6px; 
+        font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; gap: 5px;
+    }
+    .tag-success { background: #dcfce7; color: #166534; }
+    .tag-danger { background: #fee2e2; color: #991b1b; }
+    .tag-warn { background: #ffedd5; color: #9a3412; }
+
+    /* Fines Box */
+    .fines-wrap {
+        background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 24px;
+        padding: 60px; text-align: center;
+    }
+    .fine-val { font-size: 4rem; font-weight: 900; color: #ef4444; margin: 10px 0 30px; }
+    .btn-pay {
+        padding: 18px 50px; background: #ef4444; color: white; border: none; border-radius: 14px;
+        font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: 0.2s;
+    }
+    .btn-pay:hover { background: #dc2626; transform: translateY(-3px); }
+
+    /* History Table */
+    .hist-table { width: 100%; border-collapse: collapse; }
+    .hist-table th { text-align: left; padding: 15px; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; border-bottom: 2px solid var(--border-color); }
+    .hist-table td { padding: 15px; border-bottom: 1px solid var(--border-color); font-weight: 600; font-size: 0.95rem; }
+    .h-type { display: flex; align-items: center; gap: 10px; }
+    .h-icon { width: 30px; height: 30px; border-radius: 50%; background: var(--bg-body); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: var(--text-muted); }
+
+    /* --- MEGA MODAL (Reused) --- */
+    .mm-wrap { position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+    .mm-wrap.active { display: flex; }
+    .mm-box { width: 900px; max-width: 95%; background: var(--bg-surface); border-radius: 24px; display: grid; grid-template-columns: 300px 1fr; overflow: hidden; }
+    .mm-cover { width: 100%; height: 100%; object-fit: cover; background: #eee; }
+    .mm-body { padding: 40px; display: flex; flex-direction: column; }
+    
+    /* --- OTP MODAL --- */
+    .otp-wrap { position: fixed; inset: 0; z-index: 99999; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; }
+    .otp-wrap.active { display: flex; }
+    .otp-card { background: var(--bg-surface); padding: 40px; border-radius: 20px; width: 400px; text-align: center; }
+    .otp-input { width: 100%; padding: 15px; font-size: 2rem; text-align: center; letter-spacing: 10px; border-radius: 10px; border: 2px solid var(--border-color); background: var(--bg-body); color: var(--text-main); margin: 20px 0; }
+
+    @media (max-width: 900px) { .dash-layout { grid-template-columns: 1fr; } .dash-sidebar { position: relative; top: 0; margin-bottom: 40px; } .mm-box { grid-template-columns: 1fr; } .mm-cover { height: 200px; } }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="dash-layout">
+    
+    <aside class="dash-sidebar">
+        {% if user_image %}
+            <img src="{{ user_image }}" class="user-img">
+        {% else %}
+            <div class="user-initials">{{ member.full_name[0] }}</div>
+        {% endif %}
+        
+        <div class="u-name">{{ member.full_name }}</div>
+        <div class="u-tier">{{ stats.tier }}</div>
+
+        <div class="usage-box">
+            <div class="ub-head">
+                <span data-i18n="lbl_limit">Limit</span>
+                <span>{{ stats.used }} / {{ stats.max_books }}</span>
+            </div>
+            <div class="progress-bg">
+                <div class="progress-fill" style="width: {{ stats.progress }}%;"></div>
+            </div>
+        </div>
+
+        <ul class="d-menu">
+            <li class="d-item active" data-tab="loans" onclick="Dash.switchTab('loans')">
+                <i class="fas fa-book-reader"></i> <span data-i18n="t_loans">Loans</span>
+            </li>
+            <li class="d-item" data-tab="queue" onclick="Dash.switchTab('queue')">
+                <i class="fas fa-hourglass-half"></i> <span data-i18n="t_queue">Queue</span>
+            </li>
+            <li class="d-item" data-tab="history" onclick="Dash.switchTab('history')">
+                <i class="fas fa-history"></i> <span data-i18n="t_hist">History</span>
+            </li>
+            <li class="d-item" data-tab="fines" onclick="Dash.switchTab('fines')">
+                <i class="fas fa-wallet"></i> <span data-i18n="t_fines">Fines</span>
+            </li>
+        </ul>
+    </aside>
+
+    <main>
+        
+        {% if member.is_banned %}
+        <div style="background:#fee2e2; color:#991b1b; padding:20px; border-radius:12px; margin-bottom:30px; display:flex; gap:15px; align-items:center;">
+            <i class="fas fa-ban" style="font-size:1.5rem;"></i>
+            <div><b>Account Banned.</b> Please pay outstanding fines immediately.</div>
+        </div>
+        {% endif %}
+
+        <div id="loans" class="tab-content active">
+            <h2 class="sec-head" data-i18n="h_loans">Active Loans</h2>
+            <div class="cards-grid">
+                {% for loan in loans %}
+                <div class="d-card" onclick='Dash.openMega({{ loan.book_data | json }})'>
+                    <img src="{{ loan.book_data.cover_image or 'https://via.placeholder.com/150' }}" class="dc-img">
+                    <div class="dc-info">
+                        <div class="dc-title lang-en">{{ loan.book_data.title }}</div>
+                        <div class="dc-title lang-ar" style="display:none">{{ loan.book_data.title_ar }}</div>
+                        <div class="dc-sub">Return by: {{ loan.due_date }}</div>
+                        
+                        <div class="dc-tag tag-{{ loan.color }}">
+                            <i class="fas fa-clock" style="margin-right:5px;"></i> {{ loan.msg }}
+                        </div>
+                        {% if loan.fine_est > 0 %}
+                        <div style="color:#ef4444; font-size:0.8rem; font-weight:800; margin-top:5px;">
+                            +{{ loan.fine_est }} EGP Fine
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div style="grid-column:1/-1; text-align:center; padding:50px; color:var(--text-muted);">
+                    <i class="fas fa-book-open" style="font-size:3rem; margin-bottom:15px; opacity:0.3;"></i>
+                    <p data-i18n="msg_no_loans">No active loans.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div id="queue" class="tab-content">
+            <h2 class="sec-head" data-i18n="h_queue">Waitlist</h2>
+            <div class="cards-grid">
+                {% for q in queues %}
+                <div class="d-card" onclick='Dash.openMega({{ q.book_data | json }})'>
+                    <img src="{{ q.book_data.cover_image or 'https://via.placeholder.com/150' }}" class="dc-img">
+                    <div class="dc-info">
+                        <div class="dc-title lang-en">{{ q.book_data.title }}</div>
+                        <div class="dc-title lang-ar" style="display:none">{{ q.book_data.title_ar }}</div>
+                        <div class="dc-sub">Joined: {{ q.creation.strftime('%Y-%m-%d') }}</div>
+                        
+                        <div class="dc-tag tag-{{ q.color }}">
+                            {{ q.pos_label }}
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div style="grid-column:1/-1; text-align:center; padding:50px; color:var(--text-muted);">
+                    <i class="fas fa-coffee" style="font-size:3rem; margin-bottom:15px; opacity:0.3;"></i>
+                    <p data-i18n="msg_no_queue">No reservations.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div id="history" class="tab-content">
+            <h2 class="sec-head" data-i18n="h_hist">Activity Log</h2>
+            <table class="hist-table">
+                <thead>
+                    <tr>
+                        <th data-i18n="th_type">Type</th>
+                        <th data-i18n="th_detail">Detail</th>
+                        <th data-i18n="th_date">Date</th>
+                        <th data-i18n="th_status">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in history %}
+                    <tr class="hist-row">
+                        <td style="width:100px;">
+                            <span class="type-badge tb-{{ h.type }}">{{ h.type }}</span>
+                        </td>
+                        <td>{{ h.desc }}</td>
+                        <td style="color:var(--text-muted); font-size:0.8rem;">{{ h.date }}</td>
+                        <td style="text-align:right; font-weight:800; color:var(--text-main);">{{ h.status }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div id="fines" class="tab-content">
+            <h2 class="sec-head" data-i18n="h_wallet">Wallet & Fines</h2>
+            <div class="fines-wrap">
+                <div style="font-size:1.1rem; color:var(--text-muted);" data-i18n="lbl_due">Total Due</div>
+                <div class="fine-val">{{ (member.total_unpaid_fines | default(0)) | int }} EGP</div>
+                
+                {% if (member.total_unpaid_fines | default(0)) > 0 %}
+                <button class="btn-pay" onclick="Dash.payFines()">
+                    <span data-i18n="btn_pay">Pay Now</span>
+                </button>
+                <p style="margin-top:20px; font-size:0.9rem; color:var(--text-muted);">Secure payment via OTP verification.</p>
+                {% else %}
+                <div style="color:#10b981; font-weight:700; font-size:1.2rem;">
+                    <i class="fas fa-check-circle"></i> Good job! You are debt-free.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<div class="mm-wrap" id="megaModal">
+    <div class="mm-box">
+        <img id="mmCover" class="mm-cover">
+        <div class="mm-body">
+            <div id="mmCat" style="color:var(--brand-color); font-weight:800; text-transform:uppercase; margin-bottom:10px;">CAT</div>
+            <h2 id="mmTitle" style="font-size:2rem; margin-bottom:10px;">Title</h2>
+            <div id="mmAuth" style="color:var(--text-muted); margin-bottom:20px;">Author</div>
+            <div id="mmDesc" style="flex:1; margin-bottom:20px; opacity:0.8; line-height:1.6;">Desc</div>
+            
+            <button id="mmBtn" style="width:100%; padding:15px; border-radius:10px; font-weight:800; border:none; cursor:pointer; color:white;" onclick="Dash.triggerAction()">Action</button>
+            <div style="margin-top:15px; text-align:center; cursor:pointer; color:var(--text-muted);" onclick="Dash.closeAll()">Close</div>
+        </div>
+    </div>
+</div>
+
+<div class="otp-wrap" id="otpModal">
+    <div class="otp-card">
+        <h3 id="otpTitle" style="font-weight:900;">Verify</h3>
+        <p id="otpMsg" style="color:var(--text-muted); margin-bottom:20px;">Code sent to email</p>
+        
+        <div id="starSec" style="display:none; margin-bottom:20px; font-size:2rem; color:#cbd5e1; cursor:pointer;">
+            <i class="far fa-star" onclick="Dash.setRate(1)"></i>
+            <i class="far fa-star" onclick="Dash.setRate(2)"></i>
+            <i class="far fa-star" onclick="Dash.setRate(3)"></i>
+            <i class="far fa-star" onclick="Dash.setRate(4)"></i>
+            <i class="far fa-star" onclick="Dash.setRate(5)"></i>
+        </div>
+
+        <input type="text" id="otpIn" class="otp-input" maxlength="6" placeholder="000000">
+        <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">
+            <span><i class="far fa-clock"></i> <span id="timer">01:00</span></span>
+            <span style="color:var(--brand-color); cursor:pointer;" onclick="Dash.resend()">Resend</span>
+        </div>
+        
+        <button class="btn-pay" style="width:100%; background:var(--brand-color);" onclick="Dash.confirmOTP()">Confirm</button>
+        <div style="margin-top:15px; cursor:pointer;" onclick="Dash.closeAll()">Cancel</div>
+    </div>
+</div>
+
+<div class="otp-wrap" id="infoModal">
+    <div class="otp-card">
+        <div style="font-size:3rem; color:#10b981; margin-bottom:15px;"><i class="fas fa-check-circle"></i></div>
+        <h3>Great Job!</h3>
+        <p style="color:var(--text-muted);">You have no outstanding fines.</p>
+        <button class="btn-pay" style="width:100%; background:#10b981; margin-top:20px;" onclick="Dash.closeAll()">OK</button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+    const Dash = {
+        currBook: null,
+        currAction: null,
+        userRating: 0,
+        timer: null,
+        timeLeft: 60,
+
+        dict: {
+            'en': { 't_loans':'My Books', 't_queue':'Reservations', 't_wallet':'Wallet', 't_hist':'History', 'h_loans':'Active Loans', 'h_queue':'Waitlist', 'h_wallet':'Wallet & Fines', 'h_hist':'Activity Log', 'lbl_limit':'Limit', 'msg_no_loans':'No active loans.', 'msg_no_queue':'No reservations.', 'btn_pay':'Pay Now', 'btn_return':'Return Book', 'btn_leave':'Leave Queue', 'btn_claim':'Claim Book', 'th_type':'Type', 'th_detail':'Detail', 'th_date':'Date', 'th_status':'Status' },
+            'ar': { 't_loans':'كتبي', 't_queue':'حجوزاتي', 't_wallet':'المحفظة', 't_hist':'السجل', 'h_loans':'كتب مستعارة', 'h_queue':'انتظار', 'h_wallet':'المحفظة والغرامات', 'h_hist':'سجل العمليات', 'lbl_limit':'الحد الأقصى', 'msg_no_loans':'لا توجد استعارات.', 'msg_no_queue':'القائمة فارغة.', 'btn_pay':'دفع الآن', 'btn_return':'إرجاع الكتاب', 'btn_leave':'إلغاء الحجز', 'btn_claim':'استلام الكتاب', 'th_type':'النوع', 'th_detail':'التفاصيل', 'th_date':'التاريخ', 'th_status':'الحالة' }
+        },
+
+        init() {
+            this.updateLang();
+            this.checkUrlParam(); // Check for ?tab=...
+            window.addEventListener('lms-ui-update', () => this.updateLang());
+        },
+
+        updateLang() {
+            const lang = localStorage.getItem('lms_lang') || 'en';
+            const texts = this.dict[lang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const k = el.getAttribute('data-i18n');
+                if(texts[k]) el.innerText = texts[k];
+            });
+            
+            if(lang==='ar') {
+                document.querySelectorAll('.lang-en').forEach(e=>e.style.display='none');
+                document.querySelectorAll('.lang-ar').forEach(e=>e.style.display='block');
+            } else {
+                document.querySelectorAll('.lang-ar').forEach(e=>e.style.display='none');
+                document.querySelectorAll('.lang-en').forEach(e=>e.style.display='block');
+            }
+        },
+
+        // --- TAB LOGIC ---
+        checkUrlParam() {
+            const params = new URLSearchParams(window.location.search);
+            const tab = params.get('tab');
+            if(tab) {
+                this.switchTab(tab);
+            }
+        },
+
+        switchTab(id) {
+            // Activate content
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            const target = document.getElementById(id);
+            if(target) target.classList.add('active');
+            
+            // Activate menu item
+            document.querySelectorAll('.d-item').forEach(i => i.classList.remove('active'));
+            const link = document.querySelector(`.d-item[data-tab="${id}"]`);
+            if(link) link.classList.add('active');
+        },
+
+        // --- ACTIONS ---
+        openMega(book) {
+            this.currBook = book;
+            const lang = localStorage.getItem('lms_lang') || 'en';
+            const isAr = lang === 'ar';
+            const txt = this.dict[lang];
+
+            document.getElementById('mmCover').src = book.cover_image;
+            document.getElementById('mmCat').innerText = book.category;
+            document.getElementById('mmTitle').innerText = isAr ? book.title_ar : book.title;
+            document.getElementById('mmAuth').innerText = isAr ? book.author_ar : book.author;
+            document.getElementById('mmDesc').innerHTML = isAr ? book.description_ar : book.description;
+
+            const btn = document.getElementById('mmBtn');
+            // إعادة ضبط الكلاسات الأساسية للزر
+            btn.className = 'btn-pay'; 
+            btn.style.background = 'var(--brand-color)'; // لون افتراضي
+
+            if(book.user_action === 'return') {
+                this.currAction = 'return';
+                btn.style.background = '#10b981'; // أخضر للإرجاع
+                btn.innerHTML = `<i class="fas fa-undo"></i> ${txt.btn_return}`;
+            } else if(book.user_action === 'leave_queue') {
+                this.currAction = 'leave_queue';
+                btn.style.background = '#ef4444'; // أحمر لإلغاء الحجز
+                btn.innerHTML = `<i class="fas fa-times"></i> ${txt.btn_leave}`;
+            } else if(book.user_action === 'claim') {
+                this.currAction = 'borrow';
+                btn.style.background = 'var(--brand-color)';
+                btn.innerHTML = `<i class="fas fa-check"></i> ${txt.btn_claim}`;
+            }
+
+            document.getElementById('megaModal').classList.add('active');
+        },
+
+        triggerAction() {
+            if(this.currAction === 'leave_queue') {
+                // Direct call for leave queue (no OTP in current logic, or adapt as needed)
+                // For consistency with Library page, assume direct call first
+                document.getElementById('megaModal').classList.remove('active');
+                if(confirm("Are you sure you want to leave the queue? Deposit will be lost.")) {
+                    this.callBackend(this.currAction);
+                }
+            } else {
+                document.getElementById('megaModal').classList.remove('active');
+                this.callBackend(this.currAction);
+            }
+        },
+
+        async payFines() {
+            this.currAction = 'pay_fines';
+            this.callBackend('pay_fines');
+        },
+
+        async callBackend(action) {
+            try {
+                const body = new URLSearchParams({ action: action });
+                if(this.currBook) body.append('book_name', this.currBook.name);
+
+                const res = await fetch('/api/method/lms_portal.library_ops.initiate_action', {
+                    method: 'POST',
+                    headers: { 
+                        'X-Frappe-CSRF-Token': "{{ csrf_token }}",
+                        'Accept': 'application/json'
+                    },
+                    body: body
+                });
+
+                const data = await res.json();
+                
+                if (!res.ok) {
+                    // إذا كان هناك رسالة خطأ من النظام (مثل تجاوز الحد)
+                    let msg = "Error occurred";
+                    if (data._server_messages) {
+                        msg = JSON.parse(JSON.parse(data._server_messages)[0]).message;
+                    }
+                    alert(msg);
+                    return;
+                }
+
+                if(data.message.status === 'done') {
+                    alert("Success!");
+                    location.reload();
+                } else if(data.message.status === 'otp_sent') {
+                    document.getElementById('otpModal').classList.add('active');
+                    document.getElementById('otpIn').focus();
+                    document.getElementById('otpMsg').innerText = `Code sent. Amount: ${data.message.amount} EGP`;
+                    document.getElementById('starSec').style.display = action === 'return' ? 'block' : 'none';
+                    this.startTimer();
+                }
+            } catch(e) { 
+                console.error(e);
+                alert("Connection Error"); 
+            }
+        },
+
+        startTimer() {
+            this.timeLeft = 60;
+            if(this.timer) clearInterval(this.timer);
+            this.timer = setInterval(() => {
+                this.timeLeft--;
+                document.getElementById('timer').innerText = this.timeLeft;
+                if(this.timeLeft <= 0) clearInterval(this.timer);
+            }, 1000);
+        },
+
+        async resend() {
+            if(this.timeLeft > 0) return;
+            this.callBackend(this.currAction);
+        },
+
+        async confirmOTP() {
+            const otp = document.getElementById('otpIn').value;
+            if(otp.length < 6) return;
+
+            try {
+                const fd = new FormData();
+                fd.append('otp', otp);
+                if(this.currAction === 'return') fd.append('rating', this.userRating);
+
+                const res = await fetch('/api/method/lms_portal.library_ops.confirm_action', {
+                    method: 'POST',
+                    headers: { 'X-Frappe-CSRF-Token': "{{ csrf_token }}" },
+                    body: fd
+                });
+                const data = await res.json();
+                if(data.message.status === 'success') {
+                    alert("Operation Successful!");
+                    location.reload();
+                } else { alert("Invalid OTP"); }
+            } catch(e) { alert("Error"); }
+        },
+
+        setRate(n) {
+            this.userRating = n;
+            document.querySelectorAll('#starSec i').forEach((e, i) => e.className = i < n ? 'fas fa-star' : 'far fa-star');
+        },
+
+        closeAll() {
+            document.querySelectorAll('.otp-wrap, .mm-wrap, .otp-wrap#infoModal').forEach(e => e.classList.remove('active'));
+        }
+    };
+    Dash.init();
+</script>
+{% endblock %}

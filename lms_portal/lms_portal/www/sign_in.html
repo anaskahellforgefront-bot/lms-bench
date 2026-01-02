@@ -1,0 +1,242 @@
+{% extends "lms_portal/www/base.html" %}
+
+{% block title %}Sign In | LMS Elite{% endblock %}
+
+{% block head_css %}
+<style>
+    /* --- 1. GLOBAL SETTINGS --- */
+    html { writing-mode: horizontal-tb; direction: ltr; }
+    html[dir="rtl"] { direction: rtl; }
+
+    /* --- 2. LAYOUT --- */
+    .auth-wrapper {
+        display: flex; flex-direction: row;
+        min-height: calc(100vh - 76px);
+        background: var(--bg-body); width: 100%; overflow-x: hidden;
+    }
+    html[dir="rtl"] .auth-wrapper { flex-direction: row-reverse; }
+
+    /* VISUAL SIDE */
+    .visual-side {
+        flex: 1.2; position: relative;
+        background-color: #1e293b;
+        background-image: url('https://images.unsplash.com/photo-1481627834876-b7833e8f5570?q=80&w=2228&auto=format&fit=crop');
+        background-size: cover; background-position: center;
+        display: none; 
+    }
+    .visual-overlay {
+        position: absolute; inset: 0;
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.9), rgba(2, 6, 23, 0.95));
+        display: flex; flex-direction: column; justify-content: center;
+        padding: 80px; color: white;
+    }
+
+    /* FORM SIDE */
+    .form-side {
+        flex: 1; display: flex; align-items: center; justify-content: center;
+        padding: 40px; background: var(--bg-surface); position: relative; z-index: 10;
+    }
+
+    /* COMPONENTS */
+    .auth-card {
+        width: 100%; max-width: 420px;
+        opacity: 0; transform: translateY(20px);
+        transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .auth-card.visible { opacity: 1; transform: translateY(0); }
+
+    .input-group-elite { margin-bottom: 24px; position: relative; }
+    .label-elite { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; color: var(--text-main); }
+    
+    .input-elite {
+        width: 100%; height: 56px; padding: 0 20px;
+        background: var(--bg-body); border: 1.5px solid var(--border-color);
+        border-radius: var(--radius-md); font-size: 1rem; color: var(--text-main); transition: 0.3s;
+    }
+    .input-elite:focus { border-color: var(--brand-color); outline: none; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); background: var(--bg-surface); }
+
+    .pass-toggle { position: absolute; top: 42px; inset-inline-end: 20px; color: var(--text-muted); cursor: pointer; transition: 0.2s; }
+    .pass-toggle:hover { color: var(--brand-color); }
+
+    .actions-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; font-size: 0.9rem; }
+    
+    .error-box {
+        background: #FEF2F2; border: 1px solid #FCA5A5; color: #DC2626;
+        padding: 12px 16px; border-radius: var(--radius-md);
+        font-size: 0.9rem; font-weight: 500; margin-bottom: 24px;
+        display: none; align-items: center; gap: 10px;
+    }
+    
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
+    .shake-anim { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+
+    @media (min-width: 992px) { .visual-side { display: block; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="visual-side">
+        <div class="visual-overlay">
+            <h1 style="font-size: 3.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 24px;" data-i18n="s_hero_title">Access the<br>Archives.</h1>
+            <p style="font-size: 1.25rem; opacity: 0.85; max-width: 500px; line-height: 1.6;" data-i18n="s_hero_desc">Secure entry point for library members.</p>
+        </div>
+    </div>
+
+    <div class="form-side">
+        <div class="auth-card">
+            
+            <div style="margin-bottom: 32px;">
+                <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 8px;" data-i18n="s_head">Sign In</h2>
+                <p style="color: var(--text-muted);" data-i18n="s_sub">Welcome back, please enter your details.</p>
+            </div>
+
+            <div class="error-box" id="loginError">
+                <i class="fas fa-exclamation-circle"></i> <span id="errorText">Invalid credentials</span>
+            </div>
+
+            <form id="loginForm" onsubmit="return false;">
+                <div class="input-group-elite">
+                    <label class="label-elite" data-i18n="lbl_email">Email Address</label>
+                    <input type="email" id="login_email" class="input-elite" placeholder="name@example.com" required autofocus>
+                </div>
+
+                <div class="input-group-elite">
+                    <label class="label-elite" data-i18n="lbl_pass">Password</label>
+                    <input type="password" id="login_pass" class="input-elite" placeholder="••••••••" required>
+                    <i class="fas fa-eye pass-toggle" id="btnTogglePass"></i>
+                </div>
+
+                <div class="actions-row">
+                    <label style="display:flex; gap:8px; cursor:pointer;">
+                        <input type="checkbox" id="remember_me"> <span data-i18n="lbl_remember">Remember me</span>
+                    </label>
+                    <a href="/forgot_password" style="color: var(--brand-color); font-weight: 600;" data-i18n="lbl_forgot">Forgot Password?</a>
+                </div>
+
+                <button type="submit" class="btn-elite btn-primary-glow w-100 py-3 justify-content-center" id="submitBtn">
+                    <span data-i18n="btn_submit">Sign In to Dashboard</span> <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <span style="color: var(--text-muted);" data-i18n="txt_no_account">Don't have an account?</span>
+                <a href="/sign_up" style="font-weight: 700; text-decoration: underline;" data-i18n="link_join">Join for free</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    // --- SECURITY NET: Client-Side Redirect ---
+    if ("{{ frappe.session.user }}" !== "Guest") {
+        window.location.href = "/library";
+    }
+    
+    const SignInPage = {
+        dict: {
+            'en': {
+                's_hero_title': 'Access the\nArchives.', 's_hero_desc': 'Secure entry point for library members.',
+                's_head': 'Sign In', 's_sub': 'Welcome back.',
+                'lbl_email': 'Email Address', 'lbl_pass': 'Password', 'lbl_remember': 'Remember me',
+                'lbl_forgot': 'Forgot password?', 'btn_submit': 'Sign In',
+                'txt_no_account': "Don't have an account?", 'link_join': 'Join for free',
+                'err_invalid': 'Invalid email or password.', 'btn_loading': 'Verifying...'
+            },
+            'ar': {
+                's_hero_title': 'بوابة\nالأرشيف.', 's_hero_desc': 'نقطة دخول آمنة لأعضاء المكتبة.',
+                's_head': 'تسجيل الدخول', 's_sub': 'مرحباً بعودتك.',
+                'lbl_email': 'البريد الإلكتروني', 'lbl_pass': 'كلمة المرور', 'lbl_remember': 'تذكرني',
+                'lbl_forgot': 'نسيت كلمة المرور؟', 'btn_submit': 'دخول',
+                'txt_no_account': "ليس لديك حساب؟", 'link_join': 'انضم مجاناً',
+                'err_invalid': 'بيانات الدخول غير صحيحة.', 'btn_loading': 'جاري التحقق...'
+            }
+        },
+
+        init() {
+            setTimeout(() => { document.querySelector('.auth-card').classList.add('visible'); }, 50);
+            this.applyLocalTranslations();
+            
+            document.getElementById('btnTogglePass').onclick = this.togglePass;
+            document.getElementById('loginForm').onsubmit = (e) => { e.preventDefault(); this.loginWithAPI(); };
+            
+            window.addEventListener('lms-ui-update', (e) => this.applyLocalTranslations(e.detail.lang));
+        },
+
+        togglePass() {
+            const input = document.getElementById('login_pass');
+            const icon = document.getElementById('btnTogglePass');
+            if(input.type === 'password') { input.type = 'text'; icon.className = 'fas fa-eye-slash pass-toggle'; }
+            else { input.type = 'password'; icon.className = 'fas fa-eye pass-toggle'; }
+        },
+
+        // --- UPDATED ROBUST LOGIN LOGIC ---
+        async loginWithAPI() {
+            const email = document.getElementById('login_email').value;
+            const password = document.getElementById('login_pass').value;
+            const btn = document.getElementById('submitBtn');
+            const errorBox = document.getElementById('loginError');
+            const lang = localStorage.getItem('lms_lang') || 'en';
+
+            errorBox.style.display = 'none';
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> ${this.dict[lang]['btn_loading']}`;
+
+            try {
+                const formData = new FormData();
+                formData.append('usr', email);
+                formData.append('pwd', password);
+
+                const response = await fetch('/api/method/login', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                // FIX: Trust only HTTP Status (200 = Success), ignore message text
+                if (response.ok) {
+                    window.location.href = '/library';
+                } else {
+                    throw new Error(result.message || 'Failed');
+                }
+
+            } catch (error) {
+                // FAIL-SAFE: If error is ambiguous, try reloading. 
+                // If user is actually logged in, Python guard will catch them.
+                if (error.message === 'Failed' || error.message.includes('Logged In')) {
+                     window.location.reload();
+                     return;
+                }
+
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                errorBox.style.display = 'flex';
+                document.getElementById('errorText').innerText = this.dict[lang]['err_invalid'];
+                
+                const card = document.querySelector('.auth-card');
+                card.classList.remove('shake-anim');
+                void card.offsetWidth;
+                card.classList.add('shake-anim');
+            }
+        },
+
+        applyLocalTranslations(lang = null) {
+            const currentLang = lang || localStorage.getItem('lms_lang') || 'en';
+            const texts = this.dict[currentLang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (texts[key]) {
+                    if (el.tagName === 'INPUT') el.placeholder = texts[key];
+                    else el.innerHTML = texts[key].replace(/\n/g, '<br>');
+                }
+            });
+        }
+    };
+
+    SignInPage.init();
+</script>
+{% endblock %}

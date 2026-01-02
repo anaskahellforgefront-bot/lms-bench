@@ -1,0 +1,236 @@
+{% extends "lms_portal/www/base.html" %}
+
+{% block title %}Knowledge Hub | LMS Elite{% endblock %}
+
+{% block head_css %}
+<style>
+    /* --- HERO SECTION --- */
+    .blog-hero {
+        position: relative; padding: 100px 20px 80px;
+        background: radial-gradient(circle at 10% 20%, rgb(37, 99, 235) 0%, rgb(15, 23, 42) 90%);
+        color: white; overflow: hidden; text-align: center;
+    }
+    
+    /* Animated Background Blob */
+    .hero-blob {
+        position: absolute; top: -50%; left: -20%; width: 80%; height: 200%;
+        background: radial-gradient(circle, rgba(96, 165, 250, 0.3) 0%, rgba(0,0,0,0) 70%);
+        animation: floatBlob 10s infinite alternate ease-in-out; pointer-events: none;
+    }
+    @keyframes floatBlob { from { transform: translate(0, 0); } to { transform: translate(100px, 50px); } }
+
+    .hero-content { position: relative; z-index: 2; max-width: 800px; margin: 0 auto; }
+    
+    .hero-badge {
+        display: inline-block; padding: 6px 16px; border-radius: 50px;
+        background: rgba(255,255,255,0.1); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.2);
+        font-size: 0.85rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 20px;
+    }
+    
+    .hero-title {
+        font-size: 3.5rem; font-weight: 900; line-height: 1.1; margin-bottom: 20px;
+        background: linear-gradient(to right, #ffffff, #94a3b8);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    .hero-search-wrap {
+        margin-top: 40px; position: relative; max-width: 500px; margin-left: auto; margin-right: auto;
+    }
+    .hero-search {
+        width: 100%; padding: 18px 25px 18px 55px; border-radius: 50px; border: none;
+        background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+        color: white; font-size: 1rem; transition: 0.3s;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .hero-search:focus { background: rgba(255,255,255,0.2); outline: none; box-shadow: 0 10px 40px rgba(37, 99, 235, 0.3); }
+    .search-icon { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); opacity: 0.7; }
+    
+    html[dir="rtl"] .hero-search { padding: 18px 55px 18px 25px; }
+    html[dir="rtl"] .search-icon { left: auto; right: 20px; }
+
+
+    /* --- GRID SYSTEM --- */
+    .blog-container { max-width: 1400px; margin: -50px auto 50px; padding: 0 24px; position: relative; z-index: 5; }
+    
+    .blog-grid {
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px;
+    }
+    
+    /* Responsive Grid */
+    @media (max-width: 1100px) { .blog-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 768px) { 
+        .blog-grid { grid-template-columns: 1fr; } 
+        .hero-title { font-size: 2.5rem; }
+    }
+
+    /* --- PRO CARD --- */
+    .elite-card {
+        background: var(--bg-surface); border-radius: 20px; overflow: hidden;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 10px 30px -10px rgba(0,0,0,0.05);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex; flex-direction: column; height: 100%;
+        text-decoration: none !important;
+    }
+    
+    .elite-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 20px 40px -10px rgba(37, 99, 235, 0.2);
+        border-color: var(--brand-color);
+    }
+
+    .card-thumb {
+        height: 240px; overflow: hidden; position: relative;
+    }
+    .card-img {
+        width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease;
+    }
+    .elite-card:hover .card-img { transform: scale(1.15); }
+    
+    .card-overlay {
+        position: absolute; top: 15px; left: 15px;
+        background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px);
+        color: white; padding: 6px 14px; border-radius: 50px;
+        font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+    }
+    html[dir="rtl"] .card-overlay { left: auto; right: 15px; }
+
+    .card-content { padding: 30px; flex: 1; display: flex; flex-direction: column; }
+    
+    .card-meta {
+        font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;
+        display: flex; align-items: center; gap: 10px;
+    }
+    
+    .card-title {
+        font-size: 1.4rem; font-weight: 800; line-height: 1.4; margin-bottom: 15px;
+        color: var(--text-main); transition: 0.2s;
+    }
+    .elite-card:hover .card-title { color: var(--brand-color); }
+    
+    .card-desc {
+        font-size: 0.95rem; color: var(--text-muted); line-height: 1.6;
+        display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+        margin-bottom: 25px; flex: 1;
+    }
+
+    .card-footer {
+        padding-top: 20px; border-top: 1px solid var(--border-color);
+        display: flex; justify-content: space-between; align-items: center;
+        font-size: 0.9rem; font-weight: 600; color: var(--text-main);
+    }
+    
+    .read-more {
+        color: var(--brand-color); display: flex; align-items: center; gap: 6px;
+        font-weight: 700; transition: 0.2s;
+    }
+    .elite-card:hover .read-more { gap: 10px; }
+    html[dir="rtl"] .read-more i { transform: rotate(180deg); }
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="blog-hero">
+    <div class="hero-blob"></div>
+    <div class="hero-content">
+        <span class="hero-badge" data-i18n="hero_badge">LMS Editorial</span>
+        <h1 class="hero-title lang-en">Insights for the<br>Modern Mind.</h1>
+        <h1 class="hero-title lang-ar" style="display:none;">رؤى وأفكار<br>للعقل الحديث.</h1>
+        
+        <div class="hero-search-wrap">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" class="hero-search" id="searchInput" onkeyup="BlogList.filter()" data-i18n="ph_search" placeholder="Search articles...">
+        </div>
+    </div>
+</div>
+
+<div class="blog-container">
+    <div class="blog-grid" id="blogGrid">
+        {% for blog in blogs %}
+        <a href="/blog_view?name={{ blog.name }}" class="elite-card" data-title="{{ blog.title_en }} {{ blog.title_ar }}">
+            <div class="card-thumb">
+                <img src="{{ blog.cover_image or 'https://via.placeholder.com/600x400' }}" class="card-img" alt="Blog">
+                <div class="card-overlay">{{ blog.tags or 'General' }}</div>
+            </div>
+            
+            <div class="card-content">
+                <div class="card-meta">
+                    <span><i class="far fa-clock"></i> {{ blog.read_time }} min</span>
+                    <span>&bull;</span>
+                    <span>{{ blog.creation.strftime('%d %b') }}</span>
+                </div>
+
+                <h3 class="card-title lang-en">{{ blog.title_en }}</h3>
+                <h3 class="card-title lang-ar" style="display:none;">{{ blog.title_ar }}</h3>
+
+                <p class="card-desc lang-en">{{ blog.short_desc_en }}</p>
+                <p class="card-desc lang-ar" style="display:none;">{{ blog.short_desc_ar }}</p>
+
+                <div class="card-footer">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <i class="fas fa-user-circle" style="color:var(--text-muted);"></i> {{ blog.author }}
+                    </div>
+                    <div class="read-more">
+                        <span data-i18n="btn_read">Read</span> <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+    const BlogList = {
+        dict: {
+            'en': { 'hero_badge': 'LMS Editorial', 'ph_search': 'Search articles...', 'btn_read': 'Read Now' },
+            'ar': { 'hero_badge': 'مدونة النظام', 'ph_search': 'ابحث في المقالات...', 'btn_read': 'اقرأ الآن' }
+        },
+
+        init() {
+            this.updateLang();
+            window.addEventListener('lms-ui-update', () => this.updateLang());
+        },
+
+        updateLang() {
+            const lang = localStorage.getItem('lms_lang') || 'en';
+            
+            // Text
+            const texts = this.dict[lang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if(texts[key]) {
+                    if(el.tagName === 'INPUT') el.placeholder = texts[key];
+                    else el.innerText = texts[key];
+                }
+            });
+
+            // Toggle
+            if (lang === 'ar') {
+                document.querySelectorAll('.lang-en').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.lang-ar').forEach(el => el.style.display = '-webkit-box');
+                document.querySelectorAll('.lang-ar.hero-title').forEach(el => el.style.display = 'block');
+            } else {
+                document.querySelectorAll('.lang-ar').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.lang-en').forEach(el => el.style.display = '-webkit-box');
+                document.querySelectorAll('.lang-en.hero-title').forEach(el => el.style.display = 'block');
+            }
+        },
+
+        filter() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            document.querySelectorAll('.elite-card').forEach(card => {
+                const text = card.getAttribute('data-title').toLowerCase();
+                card.style.display = text.includes(query) ? 'flex' : 'none';
+            });
+        }
+    };
+
+    BlogList.init();
+</script>
+{% endblock %}

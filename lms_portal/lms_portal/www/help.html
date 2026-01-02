@@ -1,0 +1,450 @@
+{% extends "lms_portal/www/base.html" %}
+
+{% block title %}Help Center | LMS Elite{% endblock %}
+
+{% block head_css %}
+<style>
+    /* --- 1. HERO SLIDER (Consistent with Memberships) --- */
+    .hero-wrapper {
+        position: relative; height: 500px; width: 100%; overflow: hidden;
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        text-align: center; color: white; margin-bottom: 60px;
+        background: #0F172A;
+    }
+
+    .slide-bg {
+        position: absolute; inset: 0; background-size: cover; background-position: center;
+        opacity: 0; transform: scale(1); animation: zoomFade 20s infinite; z-index: 0;
+    }
+    
+    /* Support / Team Images */
+    .slide-1 { background-image: url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2000&auto=format&fit=crop'); animation-delay: 0s; }
+    .slide-2 { background-image: url('https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=2000&auto=format&fit=crop'); animation-delay: 6s; }
+    .slide-3 { background-image: url('https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=2000&auto=format&fit=crop'); animation-delay: 13s; }
+
+    @keyframes zoomFade {
+        0% { opacity: 0; transform: scale(1); }
+        10% { opacity: 1; }
+        30% { opacity: 1; transform: scale(1.1); }
+        40% { opacity: 0; }
+        100% { opacity: 0; }
+    }
+
+    .hero-overlay {
+        position: absolute; inset: 0; z-index: 1;
+        background: linear-gradient(to bottom, rgba(15, 23, 42, 0.5), rgba(15, 23, 42, 0.95) 90%, var(--bg-body));
+    }
+
+    .hero-content {
+        position: relative; z-index: 2; max-width: 800px; padding: 0 20px;
+        animation: fadeInUp 1s ease-out; margin-top: 40px;
+    }
+
+    .hero-pill {
+        display: inline-block; padding: 8px 20px; border-radius: 50px;
+        background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+        backdrop-filter: blur(10px); color: #60A5FA;
+        font-weight: 700; text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem;
+        margin-bottom: 20px;
+    }
+
+    .hero-title {
+        font-size: 3.5rem; font-weight: 900; line-height: 1.1; margin-bottom: 20px;
+        text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .hero-desc {
+        font-size: 1.2rem; line-height: 1.6; color: rgba(255,255,255,0.9);
+        max-width: 600px; margin: 0 auto;
+    }
+
+    /* --- 2. CONTACT CARDS (Floating) --- */
+    .cards-container {
+        max-width: 1100px; margin: -100px auto 80px; padding: 0 24px; position: relative; z-index: 5;
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px;
+    }
+
+    .info-card {
+        background: var(--bg-surface); border: 1px solid var(--border-color);
+        border-radius: 20px; padding: 35px 25px; text-align: center;
+        box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1); transition: 0.3s;
+        display: flex; flex-direction: column; align-items: center;
+    }
+    .info-card:hover { transform: translateY(-10px); border-color: var(--brand-color); box-shadow: 0 30px 60px -15px rgba(37, 99, 235, 0.2); }
+
+    .ic-icon {
+        width: 60px; height: 60px; border-radius: 50%; margin-bottom: 20px;
+        display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+        background: var(--brand-soft); color: var(--brand-color);
+    }
+    .ic-title { font-weight: 800; font-size: 1rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; }
+    .ic-val { font-weight: 700; font-size: 1.1rem; color: var(--text-main); word-break: break-all; }
+
+
+    /* --- 3. FAQ SECTION (The Star) --- */
+    .section-wrapper { max-width: 900px; margin: 0 auto 100px; padding: 0 24px; }
+    
+    .sec-header { text-align: center; margin-bottom: 50px; }
+    .sec-h2 { font-size: 2.5rem; font-weight: 900; margin-bottom: 15px; color: var(--text-main); }
+    .sec-sub { color: var(--text-muted); font-size: 1.1rem; }
+
+    .faq-card {
+        background: var(--bg-surface); border: 1px solid var(--border-color);
+        border-radius: 16px; margin-bottom: 15px; overflow: hidden;
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .faq-card:hover { border-color: var(--brand-color); }
+    
+    .faq-trigger {
+        padding: 25px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+        font-weight: 700; font-size: 1.1rem; color: var(--text-main); user-select: none;
+    }
+    .faq-icon {
+        width: 30px; height: 30px; border-radius: 50%; background: var(--bg-body);
+        display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
+        transition: 0.3s; color: var(--text-muted);
+    }
+
+    .faq-content {
+        max-height: 0; overflow: hidden; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 0 25px; opacity: 0;
+    }
+    
+    /* Active State */
+    .faq-card.active { border-color: var(--brand-color); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+    .faq-card.active .faq-trigger { color: var(--brand-color); }
+    .faq-card.active .faq-icon { transform: rotate(180deg); background: var(--brand-color); color: white; }
+    .faq-card.active .faq-content { max-height: 300px; padding-bottom: 25px; opacity: 1; color: var(--text-muted); line-height: 1.7; }
+
+
+    /* --- 4. CONTACT FORM & MAP (Split Layout) --- */
+    .contact-split {
+        max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr;
+        border-top: 1px solid var(--border-color); background: var(--bg-surface);
+    }
+
+    /* Form Side */
+    .form-panel { padding: 80px; display: flex; flex-direction: column; justify-content: center; }
+    
+    .input-group { margin-bottom: 25px; }
+    .f-label { display: block; font-weight: 700; margin-bottom: 10px; font-size: 0.9rem; color: var(--text-main); }
+    .f-input {
+        width: 100%; padding: 18px; background: var(--bg-body); border: 2px solid var(--border-color);
+        border-radius: 12px; color: var(--text-main); font-size: 1rem; transition: 0.3s;
+    }
+    .f-input:focus { border-color: var(--brand-color); outline: none; background: var(--bg-surface); }
+    
+    .btn-send {
+        width: 100%; padding: 18px; border-radius: 12px;
+        background: var(--brand-color); color: white; font-weight: 800; font-size: 1.1rem;
+        border: none; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+    }
+    .btn-send:hover { background: var(--brand-hover); transform: translateY(-3px); box-shadow: 0 20px 40px rgba(37, 99, 235, 0.4); }
+
+    /* Map Side */
+    .map-panel { position: relative; min-height: 600px; background: #1e293b; overflow: hidden; }
+    .map-frame { width: 100%; height: 100%; border: none; filter: grayscale(1) invert(1) brightness(0.8); transition: 0.5s; }
+    .map-panel:hover .map-frame { filter: grayscale(0) invert(0); } /* Reveal colors on hover */
+
+    /* Map Location Card */
+    .loc-card {
+        position: absolute; bottom: 40px; left: 40px; right: 40px;
+        background: rgba(255, 255, 255, 0.95); padding: 25px; border-radius: 20px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.3); max-width: 350px;
+        backdrop-filter: blur(10px);
+    }
+    [data-theme="dark"] .loc-card { background: rgba(15, 23, 42, 0.95); }
+
+    /* --- 5. CUSTOM MODALS (Success/Fail) --- */
+    .modal-backdrop {
+        position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+        display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s;
+    }
+    .modal-backdrop.visible { display: flex; opacity: 1; }
+
+    .modal-box {
+        background: var(--bg-surface); padding: 50px; border-radius: 30px; width: 90%; max-width: 400px;
+        text-align: center; box-shadow: 0 30px 90px rgba(0,0,0,0.4); border: 1px solid var(--border-color);
+        transform: scale(0.9); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .modal-backdrop.visible .modal-box { transform: scale(1); }
+
+    .m-icon {
+        width: 80px; height: 80px; margin: 0 auto 25px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; font-size: 2.5rem;
+    }
+    
+    /* Success Style */
+    .is-success .m-icon { background: #DCFCE7; color: #166534; }
+    .is-success .btn-modal { background: #166534; }
+    
+    /* Error Style */
+    .is-error .m-icon { background: #FEE2E2; color: #991B1B; }
+    .is-error .btn-modal { background: #991B1B; }
+
+    .m-title { font-size: 1.8rem; font-weight: 900; margin-bottom: 10px; color: var(--text-main); }
+    .m-desc { color: var(--text-muted); margin-bottom: 30px; font-size: 1rem; line-height: 1.5; }
+
+    .btn-modal {
+        width: 100%; padding: 15px; border-radius: 12px; color: white; border: none;
+        font-weight: 700; cursor: pointer; font-size: 1rem; transition: 0.2s;
+    }
+    .btn-modal:hover { opacity: 0.9; transform: scale(1.02); }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .cards-container { grid-template-columns: 1fr; margin-top: 40px; }
+        .contact-split { grid-template-columns: 1fr; }
+        .map-panel { height: 400px; min-height: auto; }
+        .form-panel { padding: 40px 20px; }
+    }
+
+    @keyframes fadeInUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="hero-wrapper">
+    <div class="slide-bg slide-1"></div>
+    <div class="slide-bg slide-2"></div>
+    <div class="slide-bg slide-3"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <span class="hero-pill" data-i18n="hero_badge">Support Center</span>
+        <h1 class="hero-title lang-en">We're Here To Help.</h1>
+        <h1 class="hero-title lang-ar" style="display:none;">نحن هنا للمساعدة.</h1>
+        <p class="hero-desc lang-en">Got questions? Need assistance? Our team is ready to guide you through your journey.</p>
+        <p class="hero-desc lang-ar" style="display:none;">هل لديك أسئلة؟ تحتاج إلى مساعدة؟ فريقنا مستعد لإرشادك خلال رحلتك.</p>
+    </div>
+</div>
+
+<div class="cards-container">
+    <div class="info-card">
+        <div class="ic-icon"><i class="fas fa-envelope-open-text"></i></div>
+        <div class="ic-title" data-i18n="lbl_email">Email Us</div>
+        <div class="ic-val">{{ settings.support_email }}</div>
+    </div>
+    <div class="info-card">
+        <div class="ic-icon"><i class="fas fa-headset"></i></div>
+        <div class="ic-title" data-i18n="lbl_phone">Call Support</div>
+        <div class="ic-val">{{ settings.support_phone }}</div>
+    </div>
+    <div class="info-card">
+        <div class="ic-icon"><i class="fas fa-map-marker-alt"></i></div>
+        <div class="ic-title" data-i18n="lbl_visit">Main Office</div>
+        <div class="ic-val">Cairo, Egypt</div>
+    </div>
+</div>
+
+<div class="section-wrapper">
+    <div class="sec-header">
+        <h2 class="sec-h2" data-i18n="h_faq">Frequently Asked Questions</h2>
+        <p class="sec-sub" data-i18n="sub_faq">Quick answers to common questions about memberships and books.</p>
+    </div>
+
+    <div class="faq-list">
+        {% for faq in faqs %}
+        <div class="faq-card" onclick="HelpApp.toggle(this)">
+            <div class="faq-trigger">
+                <span class="lang-en">{{ faq.question_en }}</span>
+                <span class="lang-ar" style="display:none;">{{ faq.question_ar }}</span>
+                <div class="faq-icon"><i class="fas fa-chevron-down"></i></div>
+            </div>
+            <div class="faq-content">
+                <div class="lang-en">{{ faq.answer_en }}</div>
+                <div class="lang-ar" style="display:none;">{{ faq.answer_ar }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="contact-split">
+    <div class="form-panel">
+        <h2 class="sec-h2" style="margin-bottom: 30px;" data-i18n="h_form">Send a Message</h2>
+        
+        <div class="row">
+            <div class="col-md-6 input-group">
+                <label class="f-label" data-i18n="lbl_name">Full Name</label>
+                <input type="text" id="cName" class="f-input" placeholder="..." 
+                       value="{% if frappe.session.user != 'Guest' %}{{ frappe.db.get_value('User', frappe.session.user, 'full_name') }}{% endif %}">
+            </div>
+            <div class="col-md-6 input-group">
+                <label class="f-label" data-i18n="lbl_mail">Email Address</label>
+                <input type="email" id="cEmail" class="f-input" placeholder="..."
+                       value="{% if frappe.session.user != 'Guest' %}{{ frappe.session.user }}{% endif %}">
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label class="f-label" data-i18n="lbl_subj">Subject</label>
+            <input type="text" id="cSubject" class="f-input" placeholder="...">
+        </div>
+
+        <div class="input-group">
+            <label class="f-label" data-i18n="lbl_msg">Message</label>
+            <textarea id="cMsg" class="f-input" style="height:140px; resize:vertical;" placeholder="..."></textarea>
+        </div>
+
+        <button class="btn-send" onclick="HelpApp.send()">
+            <span data-i18n="btn_send">Send Message</span> <i class="fas fa-paper-plane" style="margin-left:10px;"></i>
+        </button>
+    </div>
+
+    <div class="map-panel">
+        <iframe class="map-frame" 
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d55251.377099646166!2d31.22344483258814!3d30.05948381032156!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14583fa60b21beeb%3A0x79dfb296e8423bba!2sCairo%2C%20Cairo%20Governorate!5e0!3m2!1sen!2seg!4v1703628734241!5m2!1sen!2seg" 
+            allowfullscreen="" loading="lazy">
+        </iframe>
+        
+        <div class="loc-card">
+            <div style="font-weight:800; font-size:1.1rem; color:var(--text-main); margin-bottom:5px;" data-i18n="card_loc">Our Location</div>
+            <div style="color:var(--text-muted); font-size:0.95rem;">
+                <span class="lang-en">{{ settings.address_en or 'Downtown Cairo, Egypt' }}</span>
+                <span class="lang-ar" style="display:none;">{{ settings.address_ar or 'وسط البلد، القاهرة، مصر' }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="statusModal">
+    <div class="modal-box" id="modalContent">
+        </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+    const HelpApp = {
+        dict: {
+            'en': {
+                'hero_badge': 'Support Center', 'lbl_email': 'Email Us', 'lbl_phone': 'Call Support', 'lbl_visit': 'Main Office',
+                'h_faq': 'Frequently Asked Questions', 'sub_faq': 'Quick answers to common questions.',
+                'h_form': 'Send a Message', 'lbl_name': 'Full Name', 'lbl_mail': 'Email Address', 'lbl_subj': 'Subject', 'lbl_msg': 'Message',
+                'btn_send': 'Send Message', 'card_loc': 'Our Location',
+                'mod_suc': 'Message Sent!', 'mod_suc_desc': 'Thank you for contacting us. We will reply shortly.',
+                'mod_err': 'Oops!', 'btn_ok': 'Close'
+            },
+            'ar': {
+                'hero_badge': 'مركز الدعم', 'lbl_email': 'راسلنا', 'lbl_phone': 'اتصل بنا', 'lbl_visit': 'المقر الرئيسي',
+                'h_faq': 'الأسئلة الشائعة', 'sub_faq': 'إجابات سريعة على الأسئلة المتكررة.',
+                'h_form': 'أرسل رسالة', 'lbl_name': 'الاسم بالكامل', 'lbl_mail': 'البريد الإلكتروني', 'lbl_subj': 'الموضوع', 'lbl_msg': 'الرسالة',
+                'btn_send': 'إرسال الرسالة', 'card_loc': 'موقعنا',
+                'mod_suc': 'تم الإرسال!', 'mod_suc_desc': 'شكراً لتواصلك معنا. سنرد عليك قريباً.',
+                'mod_err': 'عفواً!', 'btn_ok': 'إغلاق'
+            }
+        },
+
+        init() {
+            this.updateLang();
+            window.addEventListener('lms-ui-update', () => this.updateLang());
+        },
+
+        updateLang() {
+            const lang = localStorage.getItem('lms_lang') || 'en';
+            const texts = this.dict[lang];
+            
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if(texts[key]) el.innerText = texts[key];
+            });
+
+            if (lang === 'ar') {
+                document.querySelectorAll('.lang-en').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.lang-ar').forEach(el => el.style.display = 'block');
+            } else {
+                document.querySelectorAll('.lang-ar').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.lang-en').forEach(el => el.style.display = 'block');
+            }
+        },
+
+        // --- FAQ TOGGLE ---
+        toggle(el) {
+            // Close others (Accordion effect)
+            document.querySelectorAll('.faq-card.active').forEach(item => {
+                if(item !== el) item.classList.remove('active');
+            });
+            el.classList.toggle('active');
+        },
+
+        // --- SEND MESSAGE ---
+        async send() {
+            const name = document.getElementById('cName').value;
+            const email = document.getElementById('cEmail').value;
+            const subject = document.getElementById('cSubject').value;
+            const msg = document.getElementById('cMsg').value;
+
+            // Simple validation modal
+            if(!name || !email || !msg) { 
+                this.showModal('error', 'Missing Info', 'Please fill in all required fields.');
+                return; 
+            }
+
+            const btn = document.querySelector('.btn-send');
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('full_name', name);
+                formData.append('email', email);
+                formData.append('subject', subject);
+                formData.append('message', msg);
+
+                const response = await fetch('/api/method/lms_portal.www.help.send_message', {
+                    method: 'POST',
+                    headers: { 'X-Frappe-CSRF-Token': "{{ frappe.session.csrf_token }}" },
+                    body: formData
+                });
+
+                const res = await response.json();
+
+                if(res.message.status === 'success') {
+                    this.showModal('success');
+                    document.getElementById('cMsg').value = '';
+                    document.getElementById('cSubject').value = '';
+                } else {
+                    this.showModal('error', 'Error', res.message.msg);
+                }
+
+            } catch(e) { 
+                this.showModal('error', 'System Error', 'Could not connect to server.');
+            }
+
+            btn.disabled = false; btn.innerHTML = original;
+        },
+
+        // --- CUSTOM MODAL LOGIC ---
+        showModal(type, titleOverride, descOverride) {
+            const lang = localStorage.getItem('lms_lang') || 'en';
+            const texts = this.dict[lang];
+            const box = document.getElementById('modalContent');
+            const wrap = document.getElementById('statusModal');
+
+            // Set Style Class
+            box.className = 'modal-box ' + (type === 'success' ? 'is-success' : 'is-error');
+            
+            // Set Content
+            const icon = type === 'success' ? '<i class="fas fa-check"></i>' : '<i class="fas fa-exclamation-triangle"></i>';
+            const title = titleOverride || (type === 'success' ? texts['mod_suc'] : texts['mod_err']);
+            const desc = descOverride || (type === 'success' ? texts['mod_suc_desc'] : 'Something went wrong.');
+            
+            box.innerHTML = `
+                <div class="m-icon">${icon}</div>
+                <h3 class="m-title">${title}</h3>
+                <p class="m-desc">${desc}</p>
+                <button class="btn-modal" onclick="HelpApp.closeModal()">${texts['btn_ok']}</button>
+            `;
+
+            wrap.classList.add('visible');
+        },
+
+        closeModal() {
+            document.getElementById('statusModal').classList.remove('visible');
+        }
+    };
+
+    HelpApp.init();
+</script>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends "lms_portal/www/base.html" %}
+
+{% block title %}Meet The Minds | LMS Elite{% endblock %}
+
+{% block head_css %}
+<style>
+    /* --- TEAM VARIABLES --- */
+    :root {
+        --team-bg: #f8fafc;
+        --card-bg: #ffffff;
+        --role-color: var(--brand-color);
+    }
+    [data-theme="dark"] {
+        --team-bg: #0f172a;
+        --card-bg: #1e293b;
+        --role-color: #60a5fa;
+    }
+
+    /* 1. HERO (With Image) */
+    .team-hero {
+        position: relative; height: 500px; display: flex; align-items: center; justify-content: center;
+        background: #0f172a; margin-top: -90px; padding-top: 90px;
+        text-align: center; overflow: hidden;
+    }
+    .th-img {
+        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+        opacity: 0.4; filter: contrast(1.1) brightness(0.8);
+    }
+    .th-content { position: relative; z-index: 5; max-width: 900px; padding: 20px; color: white; }
+    .th-title { font-size: 4rem; font-weight: 900; margin-bottom: 20px; text-shadow: 0 5px 20px rgba(0,0,0,0.3); }
+    .th-sub { font-size: 1.3rem; opacity: 0.9; max-width: 700px; margin: 0 auto; line-height: 1.6; }
+
+    /* 2. TEAM GRID */
+    .team-section { padding: 80px 20px; background: var(--team-bg); }
+    .team-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 30px; max-width: 1400px; margin: 0 auto;
+    }
+    
+    .member-card {
+        background: var(--card-bg); border-radius: 20px; overflow: hidden;
+        border: 1px solid var(--border-color); transition: 0.4s; position: relative;
+        display: flex; flex-direction: column; box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    .member-card:hover { transform: translateY(-10px); box-shadow: 0 20px 50px rgba(37,99,235,0.15); border-color: var(--role-color); }
+    
+    .mc-img-wrap { height: 380px; overflow: hidden; position: relative; }
+    .mc-img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; filter: grayscale(100%); }
+    .member-card:hover .mc-img { filter: grayscale(0%); transform: scale(1.05); }
+    
+    .mc-info { padding: 30px; flex: 1; display: flex; flex-direction: column; text-align: center; }
+    .mc-name { font-size: 1.5rem; font-weight: 800; margin-bottom: 5px; color: var(--text-main); }
+    .mc-role { font-size: 0.85rem; font-weight: 700; color: var(--role-color); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; }
+    .mc-bio { font-size: 1rem; color: var(--text-muted); line-height: 1.6; }
+    
+    /* 3. VALUES */
+    .values-sec { padding: 100px 20px; background: var(--bg-surface); border-top: 1px solid var(--border-color); }
+    .val-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 50px; max-width: 1400px; margin: 0 auto; text-align: center; }
+    .val-icon { font-size: 3.5rem; color: var(--role-color); margin-bottom: 25px; opacity: 0.8; }
+    .val-head { font-size: 1.5rem; font-weight: 800; margin-bottom: 15px; color: var(--text-main); }
+    .val-desc { color: var(--text-muted); line-height: 1.7; font-size: 1.05rem; }
+
+    /* 4. FINAL CTA (Library Link) */
+    .join-cta { padding: 120px 20px; text-align: center; background: var(--team-bg); }
+    .jc-box { max-width: 800px; margin: 0 auto; }
+    .jc-title { font-size: 3.5rem; font-weight: 900; margin-bottom: 25px; color: var(--text-main); }
+    .jc-btn {
+        background: var(--role-color); color: white; padding: 20px 50px;
+        border-radius: 50px; font-weight: 800; text-transform: uppercase; margin-top: 30px;
+        display: inline-block; transition: 0.3s; font-size: 1.1rem; box-shadow: 0 10px 30px rgba(37,99,235,0.3);
+    }
+    .jc-btn:hover { transform: translateY(-5px); box-shadow: 0 20px 50px rgba(37,99,235,0.5); filter: brightness(1.1); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="team-hero">
+    <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2000" class="th-img">
+    
+    <div class="th-content">
+        <h1 class="th-title lang-en">Architects of Knowledge</h1>
+        <h1 class="th-title lang-ar" style="display:none;">مهندسو المعرفة</h1>
+        <p class="th-sub lang-en">Meet the diverse team of innovators, educators, and creators building the future of learning.</p>
+        <p class="th-sub lang-ar" style="display:none;">تعرف على الفريق المتنوع من المبتكرين والمعلمين والمبدعين الذين يبنون مستقبل التعلم.</p>
+    </div>
+</div>
+
+<div class="team-section">
+    <div class="team-grid">
+        {% for m in team %}
+        <div class="member-card">
+            <div class="mc-img-wrap">
+                <img src="{{ m.image }}" class="mc-img">
+            </div>
+            <div class="mc-info">
+                <div class="mc-name">{{ m.name }}</div>
+                <div class="mc-role">{{ m.role }}</div>
+                <p class="mc-bio">{{ m.bio }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="values-sec">
+    <div class="val-grid">
+        <div>
+            <div class="val-icon"><i class="fas fa-rocket"></i></div>
+            <h3 class="val-head lang-en">Innovation First</h3>
+            <h3 class="val-head lang-ar" style="display:none;">الابتكار أولاً</h3>
+            <p class="val-desc lang-en">We constantly push the boundaries of what's possible in EdTech.</p>
+            <p class="val-desc lang-ar" style="display:none;">نحن ندفع باستمرار حدود ما هو ممكن في تكنولوجيا التعليم.</p>
+        </div>
+        <div>
+            <div class="val-icon"><i class="fas fa-users"></i></div>
+            <h3 class="val-head lang-en">User Obsessed</h3>
+            <h3 class="val-head lang-ar" style="display:none;">شغف بالمستخدم</h3>
+            <p class="val-desc lang-en">Every decision we make starts and ends with our users' needs.</p>
+            <p class="val-desc lang-ar" style="display:none;">كل قرار نتخذه يبدأ وينتهي باحتياجات مستخدمينا.</p>
+        </div>
+        <div>
+            <div class="val-icon"><i class="fas fa-globe"></i></div>
+            <h3 class="val-head lang-en">Global Impact</h3>
+            <h3 class="val-head lang-ar" style="display:none;">تأثير عالمي</h3>
+            <p class="val-desc lang-en">We believe knowledge should have no borders or barriers.</p>
+            <p class="val-desc lang-ar" style="display:none;">نؤمن بأن المعرفة يجب ألا يكون لها حدود أو حواجز.</p>
+        </div>
+    </div>
+</div>
+
+<div class="join-cta">
+    <div class="jc-box">
+        <h2 class="jc-title lang-en">Ready to Explore?</h2>
+        <h2 class="jc-title lang-ar" style="display:none;">مستعد للاستكشاف؟</h2>
+        
+        <p style="font-size:1.3rem; color:var(--text-muted); opacity:0.9;" class="lang-en">Dive into our vast collection of books and resources.</p>
+        <p style="font-size:1.3rem; color:var(--text-muted); opacity:0.9; display:none;" class="lang-ar">غوص في مجموعتنا الضخمة من الكتب والموارد.</p>
+        
+        <a href="/library" class="jc-btn" data-i18n="nav_lib">Browse Library</a>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+    // Language Sync
+    window.addEventListener('lms-ui-update', () => {
+        const lang = localStorage.getItem('lms_lang') || 'en';
+        if(lang === 'ar') {
+            document.querySelectorAll('.lang-en').forEach(e => e.style.display='none');
+            document.querySelectorAll('.lang-ar').forEach(e => e.style.display='block');
+        } else {
+            document.querySelectorAll('.lang-ar').forEach(e => e.style.display='none');
+            document.querySelectorAll('.lang-en').forEach(e => e.style.display='block');
+        }
+    });
+</script>
+{% endblock %}

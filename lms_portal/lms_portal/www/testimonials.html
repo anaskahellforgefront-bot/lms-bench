@@ -1,0 +1,305 @@
+{% extends "lms_portal/www/base.html" %}
+
+{% block title %}Success Stories | LMS Elite{% endblock %}
+
+{% block head_css %}
+<link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.min.css" rel="stylesheet">
+
+<style>
+    /* --- PROFESSIONAL VARIABLES --- */
+    :root {
+        --primary: #0f172a; /* Royal Dark */
+        --accent: #2563EB;  /* Brand Blue */
+        --gold: #F59E0B;    /* Gold */
+        --bg-light: #F8FAFC;
+        --card-radius: 12px;
+    }
+
+    /* 1. HERO SECTION (Guaranteed Image) */
+    .hero-section {
+        position: relative; height: 500px; display: flex; align-items: center; justify-content: center;
+        background: var(--primary); color: white; margin-top: -90px; padding-top: 90px;
+        text-align: center;
+    }
+    .hero-bg {
+        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+        opacity: 0.3; filter: grayscale(100%) contrast(1.2);
+    }
+    .hero-content { position: relative; z-index: 5; max-width: 800px; padding: 20px; }
+    
+    .hero-h1 { font-size: 3.5rem; font-weight: 900; margin-bottom: 20px; letter-spacing: -1px; }
+    .hero-p { font-size: 1.25rem; opacity: 0.9; color: #cbd5e1; line-height: 1.6; }
+
+    /* STATS STRIP */
+    .stats-strip {
+        background: white; border-bottom: 1px solid #e2e8f0; padding: 40px 0;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05); position: relative; z-index: 10;
+    }
+    .stats-container {
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
+        max-width: 1200px; margin: 0 auto; padding: 0 20px;
+    }
+    .stat-item { text-align: center; border-right: 1px solid #e2e8f0; }
+    .stat-item:last-child { border: none; }
+    .stat-val { font-size: 2.5rem; font-weight: 900; color: var(--accent); line-height: 1; }
+    .stat-label { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: #64748b; margin-top: 5px; }
+
+    /* 2. VIDEO GRID (Working YouTube Embeds) */
+    .section-pad { padding: 80px 20px; background: var(--bg-light); }
+    .sec-header { text-align: center; margin-bottom: 60px; }
+    .sec-title { font-size: 2.5rem; font-weight: 800; color: var(--primary); margin-bottom: 10px; }
+    
+    .video-grid {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 30px; max-width: 1400px; margin: 0 auto;
+    }
+    .video-card {
+        background: black; border-radius: var(--card-radius); overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        aspect-ratio: 16/9; /* Fixed Ratio */
+    }
+    .video-card iframe { width: 100%; height: 100%; border: none; }
+
+    /* 3. REVIEWS GRID (Strictly Uniform) */
+    .reviews-section { padding: 80px 20px; background: white; }
+    .reviews-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 30px; max-width: 1400px; margin: 0 auto;
+    }
+    .r-card {
+        background: white; border: 1px solid #e2e8f0; border-radius: var(--card-radius);
+        padding: 30px; display: flex; flex-direction: column; height: 100%; /* Equal Height */
+        transition: 0.3s;
+    }
+    .r-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.08); border-color: var(--accent); }
+    
+    .rc-head { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+    .rc-img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
+    .rc-meta h5 { margin: 0; font-weight: 700; font-size: 1.1rem; color: var(--primary); }
+    .rc-meta span { font-size: 0.8rem; color: #64748b; font-weight: 600; text-transform: uppercase; }
+    
+    .rc-stars { color: var(--gold); margin-bottom: 15px; font-size: 0.9rem; }
+    .rc-content { flex: 1; font-size: 1rem; line-height: 1.6; color: #475569; margin-bottom: 20px; font-style: italic; }
+    .rc-date { font-size: 0.8rem; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 15px; width: 100%; }
+
+    /* 4. CTA (Full Width) */
+    .cta-section {
+        background: var(--primary); color: white; padding: 80px 20px; text-align: center;
+        position: relative; overflow: hidden;
+    }
+    .cta-btn {
+        background: var(--accent); color: white; padding: 18px 50px; border-radius: 50px;
+        font-weight: 800; text-transform: uppercase; display: inline-block; margin-top: 30px;
+        transition: 0.3s; border: none; font-size: 1.1rem; box-shadow: 0 10px 30px rgba(37, 99, 235, 0.4);
+    }
+    .cta-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(37, 99, 235, 0.6); }
+
+    /* FAB */
+    .fab {
+        position: fixed; bottom: 40px; right: 40px; width: 65px; height: 65px;
+        background: var(--accent); color: white; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+        box-shadow: 0 10px 30px rgba(37, 99, 235, 0.4); cursor: pointer; z-index: 100;
+        transition: 0.3s;
+    }
+    .fab:hover { transform: rotate(90deg) scale(1.1); }
+    [dir="rtl"] .fab { right: auto; left: 40px; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+        .hero-h1 { font-size: 2.5rem; }
+        .stats-container { grid-template-columns: 1fr 1fr; gap: 40px; }
+        .stat-item { border: none; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="hero-section">
+    <img src="https://images.unsplash.com/photo-1568667256549-094345857637?q=80&w=2000" class="hero-bg">
+    <div class="hero-content">
+        <h1 class="hero-h1 lang-en">Real Stories, Real Impact</h1>
+        <h1 class="hero-h1 lang-ar" style="display:none;">قصص واقعية، تأثير حقيقي</h1>
+        <p class="hero-p lang-en">Discover how LMS Elite is transforming the way the world learns.</p>
+        <p class="hero-p lang-ar" style="display:none;">اكتشف كيف يغير LMS Elite طريقة تعلم العالم.</p>
+    </div>
+</div>
+
+<div class="stats-strip">
+    <div class="stats-container">
+        <div class="stat-item">
+            <div class="stat-val">{{ stats.avg }}</div>
+            <div class="stat-label">Avg Rating</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-val">{{ stats.count }}+</div>
+            <div class="stat-label">Reviews</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-val">{{ stats.stars_5 }}+</div>
+            <div class="stat-label">5-Star Ratings</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-val">{{ stats.happy }}%</div>
+            <div class="stat-label">Satisfaction</div>
+        </div>
+    </div>
+</div>
+
+<div class="section-pad">
+    <div class="sec-header">
+        <h2 class="sec-title lang-en">Video Testimonials</h2>
+        <h2 class="sec-title lang-ar" style="display:none;">آراء بالفيديو</h2>
+        <p style="color:#64748b;">Hear directly from our top achievers.</p>
+    </div>
+    
+    <div class="video-grid">
+        <div class="video-card">
+            <iframe src="https://www.youtube.com/embed/5MgBikgcWnY" allowfullscreen></iframe>
+        </div>
+        <div class="video-card">
+            <iframe src="https://www.youtube.com/embed/ub6X857xT9I" allowfullscreen></iframe>
+        </div>
+        <div class="video-card">
+            <iframe src="https://www.youtube.com/embed/K455KOpdK3g" allowfullscreen></iframe>
+        </div>
+    </div>
+</div>
+
+<div class="reviews-section">
+    <div class="sec-header">
+        <h2 class="sec-title lang-en">Member Reviews</h2>
+        <h2 class="sec-title lang-ar" style="display:none;">آراء الأعضاء</h2>
+    </div>
+    
+    <div class="reviews-grid">
+        {% for r in reviews %}
+        <div class="r-card">
+            <div class="rc-head">
+                <img src="{{ r.reviewer_image or 'https://ui-avatars.com/api/?name='+r.reviewer_name+'&background=random' }}" class="rc-img">
+                <div class="rc-meta">
+                    <h5>{{ r.reviewer_name }}</h5>
+                    <span>{{ r.role }}</span>
+                </div>
+            </div>
+            
+            <div class="rc-stars">
+                {% for i in range(r.rating|int) %}<i class="fas fa-star"></i>{% endfor %}
+            </div>
+            
+            <div class="rc-content lang-en">"{{ r.content_en }}"</div>
+            <div class="rc-content lang-ar" style="display:none;">"{{ r.content_ar }}"</div>
+            
+            <div class="rc-date">Posted on {{ r.creation.strftime('%d %b %Y') }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="cta-section">
+    <h2 class="hero-h1 lang-en" style="margin-bottom:10px;">Join The Elite Today</h2>
+    <h2 class="hero-h1 lang-ar" style="margin-bottom:10px; display:none;">انضم للنخبة اليوم</h2>
+    
+    <p class="hero-p">Start your journey to unlimited knowledge.</p>
+    
+    <a href="/sign_up" class="cta-btn" data-i18n="btn_join">Get Started</a>
+</div>
+
+<div class="fab" onclick="fireModal()"><i class="fas fa-plus"></i></div>
+
+{% endblock %}
+
+{% block script %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // --- 1. LANGUAGE HANDLER ---
+    function updateLang() {
+        const lang = localStorage.getItem('lms_lang') || 'en';
+        if(lang === 'ar') {
+            document.querySelectorAll('.lang-en').forEach(e => e.style.display='none');
+            document.querySelectorAll('.lang-ar').forEach(e => e.style.display='block');
+        } else {
+            document.querySelectorAll('.lang-ar').forEach(e => e.style.display='none');
+            document.querySelectorAll('.lang-en').forEach(e => e.style.display='block');
+        }
+    }
+    window.addEventListener('lms-ui-update', updateLang);
+    document.addEventListener('DOMContentLoaded', updateLang);
+
+    // --- 2. REVIEW SUBMISSION (Robust Logic) ---
+    async function fireModal() {
+        const { value: formValues } = await Swal.fire({
+            title: 'Write a Review',
+            html: `
+                <div class="my-3">
+                    <label style="cursor:pointer; font-size:2rem; color:#ddd;" onclick="setStar(1)" id="st1">★</label>
+                    <label style="cursor:pointer; font-size:2rem; color:#ddd;" onclick="setStar(2)" id="st2">★</label>
+                    <label style="cursor:pointer; font-size:2rem; color:#ddd;" onclick="setStar(3)" id="st3">★</label>
+                    <label style="cursor:pointer; font-size:2rem; color:#ddd;" onclick="setStar(4)" id="st4">★</label>
+                    <label style="cursor:pointer; font-size:2rem; color:#ddd;" onclick="setStar(5)" id="st5">★</label>
+                </div>
+                <input type="hidden" id="swal-rating">
+                <textarea id="swal-text" class="swal2-textarea" placeholder="Share your experience..."></textarea>
+            `,
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'Submit Review',
+            confirmButtonColor: '#2563EB',
+            preConfirm: () => {
+                return {
+                    rating: document.getElementById('swal-rating').value,
+                    content: document.getElementById('swal-text').value
+                }
+            },
+            didOpen: () => {
+                window.setStar = (n) => {
+                    document.getElementById('swal-rating').value = n;
+                    for(let i=1; i<=5; i++) {
+                        document.getElementById('st'+i).style.color = i <= n ? '#F59E0B' : '#ddd';
+                    }
+                }
+            }
+        });
+
+        if (formValues) {
+            if(!formValues.rating || !formValues.content) {
+                Swal.fire('Error', 'Please rate and write a review', 'error'); return;
+            }
+
+            // Show Loading
+            Swal.fire({ title: 'Submitting...', didOpen: () => Swal.showLoading() });
+
+            try {
+                // Safe Fetch Call
+                const response = await fetch('/api/method/lms_portal.www.testimonials.submit_review', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Frappe-CSRF-Token': '{{ frappe.session.csrf_token }}'
+                    },
+                    body: JSON.stringify(formValues)
+                });
+                
+                const data = await response.json();
+
+                if(data.message && data.message.status === 'success') {
+                    Swal.fire('Success', 'Your review has been posted!', 'success').then(() => location.reload());
+                } else if(data.message && data.message.message === 'auth_required') {
+                    Swal.fire({
+                        title: 'Login Required',
+                        text: 'You need to login to post a review.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Login'
+                    }).then((r) => { if(r.isConfirmed) window.location.href='/sign_in'; });
+                } else {
+                    Swal.fire('Error', 'Something went wrong', 'error');
+                }
+            } catch(e) {
+                Swal.fire('Error', 'Network Error', 'error');
+            }
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,553 @@
+{% extends "lms_portal/www/base.html" %}
+
+{% block title %}Library Catalog | LMS Elite{% endblock %}
+
+{% block head_css %}
+<style>
+    /* --- HERO --- */
+    .lib-hero {
+        position: relative; height: 480px; display: flex; align-items: center; justify-content: center;
+        background: #0f172a; text-align: center; color: white; margin-bottom: 60px; overflow: hidden;
+    }
+    .hero-bg {
+        position: absolute; inset: 0; opacity: 0.6; background-size: cover; background-position: center;
+        background-image: url('https://images.unsplash.com/photo-1568667256549-094345857637?q=80&w=2000&auto=format&fit=crop');
+        filter: brightness(0.6); animation: slowZoom 40s infinite alternate;
+    }
+    @keyframes slowZoom { from { transform: scale(1); } to { transform: scale(1.15); } }
+    .hero-content { position: relative; z-index: 2; animation: fadeInUp 0.8s ease-out; }
+    .hero-h1 { font-size: 3.5rem; font-weight: 900; margin-bottom: 15px; text-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+
+    /* --- LAYOUT --- */
+    .catalog-layout {
+        display: grid; grid-template-columns: 280px 1fr; gap: 40px;
+        max-width: 1400px; margin: -80px auto 100px; padding: 0 30px; position: relative; z-index: 5;
+    }
+    
+    /* Fixed Sidebar */
+    .sidebar {
+        position: sticky; top: 120px; height: fit-content;
+        background: var(--bg-surface); border: 1px solid var(--border-color);
+        border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
+    .f-head { font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 15px; letter-spacing: 1px; }
+    .f-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; cursor: pointer; color: var(--text-main); font-size: 0.95rem; }
+    .f-item input { accent-color: var(--brand-color); width: 18px; height: 18px; cursor: pointer; }
+
+    /* Main Area */
+    .toolbar {
+        display: flex; justify-content: space-between; align-items: center;
+        background: var(--bg-surface); padding: 20px; border-radius: 16px; 
+        border: 1px solid var(--border-color); margin-bottom: 30px;
+    }
+    .search-w { position: relative; width: 100%; max-width: 450px; }
+    .search-i {
+        width: 100%; height: 50px; padding: 0 20px 0 50px; border-radius: 10px;
+        background: var(--bg-body); border: 1px solid var(--border-color);
+        color: var(--text-main); font-size: 1rem; transition: 0.3s;
+    }
+    .search-i:focus { border-color: var(--brand-color); outline: none; }
+    .s-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+    html[dir="rtl"] .search-i { padding: 0 50px 0 20px; }
+    html[dir="rtl"] .s-icon { left: auto; right: 15px; }
+
+    /* Books Grid (3 Columns) */
+    .books-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
+    
+    .book-card {
+        background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 16px;
+        overflow: hidden; transition: 0.3s; cursor: pointer; display: flex; flex-direction: column;
+    }
+    .book-card:hover { transform: translateY(-8px); border-color: var(--brand-color); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+    
+    .card-img { width: 100%; aspect-ratio: 2/3; object-fit: cover; background: #eee; }
+    .card-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+    .c-cat { font-size: 0.75rem; font-weight: 700; color: var(--brand-color); text-transform: uppercase; margin-bottom: 5px; }
+    .c-title { font-size: 1.15rem; font-weight: 800; color: var(--text-main); margin-bottom: 5px; line-height: 1.3; }
+    .c-auth { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px; }
+    
+    .c-foot { margin-top: auto; padding-top: 15px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+    .st-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; }
+    .st-Available { background: #dcfce7; color: #166534; }
+    .st-Borrowed, .st-Reserved { background: #fef3c7; color: #b45309; }
+
+    /* --- MEGA MODAL --- */
+    .modal-overlay {
+        position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+        display: none; align-items: center; justify-content: center; opacity: 0; transition: 0.3s;
+    }
+    .modal-overlay.active { display: flex; opacity: 1; }
+    
+    .mega-box {
+        width: 900px; max-width: 95%; background: var(--bg-surface); border-radius: 24px;
+        display: grid; grid-template-columns: 350px 1fr; overflow: hidden;
+        box-shadow: 0 50px 100px rgba(0,0,0,0.5); transform: scale(0.9); transition: 0.3s;
+    }
+    .modal-overlay.active .mega-box { transform: scale(1); }
+    
+    .mb-img { width: 100%; height: 100%; object-fit: cover; background: #eee; }
+    .mb-content { padding: 40px; display: flex; flex-direction: column; max-height: 90vh; overflow-y: auto; }
+    
+    .mb-btn {
+        width: 100%; padding: 18px; border-radius: 12px; font-weight: 800; font-size: 1.1rem;
+        border: none; cursor: pointer; color: white; display: flex; justify-content: center; gap: 10px; transition: 0.2s;
+    }
+    .btn-borrow { background: var(--brand-color); }
+    .btn-return { background: #ef4444; }
+    .btn-reserve { background: #f59e0b; }
+    .btn-leave { background: #64748b; }
+    .mb-btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+
+    /* --- OTP & WARN MODALS --- */
+    .otp-box { background: var(--bg-surface); padding: 40px; border-radius: 24px; width: 400px; text-align: center; }
+    .otp-inp { width: 100%; padding: 15px; font-size: 2rem; text-align: center; letter-spacing: 8px; margin: 20px 0; border-radius: 12px; border: 2px solid var(--border-color); background: var(--bg-body); color: var(--text-main); outline:none; }
+    .otp-inp:focus { border-color: var(--brand-color); }
+    
+    .otp-meta { display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px; }
+    .resend-lnk { color: var(--brand-color); cursor: pointer; font-weight: 700; }
+    .resend-lnk.disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Warning Icon */
+    .warn-icon { font-size: 4rem; color: #f59e0b; margin-bottom: 20px; }
+
+    /* Status Modal */
+    .status-box { background: var(--bg-surface); padding: 30px; border-radius: 20px; width: 350px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+    .st-icon { font-size: 3rem; margin-bottom: 15px; }
+    .st-success { color: #10b981; } .st-error { color: #ef4444; }
+
+    @media (max-width: 1024px) { .books-grid { grid-template-columns: repeat(2, 1fr); } .catalog-layout { grid-template-columns: 1fr; } .sidebar { display: none; } .mega-box { grid-template-columns: 1fr; } .mb-img { height: 250px; } }
+    @media (max-width: 600px) { .books-grid { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="lib-hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+        <h1 class="hero-h1 lang-en">The Grand Library</h1>
+        <h1 class="hero-h1 lang-ar" style="display:none;">المكتبة الكبرى</h1>
+        <p class="lang-en" style="font-size:1.2rem; opacity:0.9;">Knowledge awaits. Discover your next favorite book.</p>
+    </div>
+</div>
+
+<div class="catalog-layout">
+    
+    <aside class="sidebar">
+        <div style="margin-bottom:30px;">
+            <div class="f-head" data-i18n="f_status">Status</div>
+            <label class="f-item"><input type="checkbox" value="Available" checked onchange="Lib.filter()"> <span data-i18n="st_avail">Available</span></label>
+            <label class="f-item"><input type="checkbox" value="Borrowed" checked onchange="Lib.filter()"> <span data-i18n="st_borrow">Borrowed</span></label>
+        </div>
+        <div>
+            <div class="f-head" data-i18n="f_cat">Categories</div>
+            <label class="f-item"><input type="radio" name="cat" value="all" checked onchange="Lib.filter()"> <span data-i18n="all_cats">All</span></label>
+            {% for cat in categories %}
+            <label class="f-item">
+                <input type="radio" name="cat" value="{{ cat.name }}" onchange="Lib.filter()"> 
+                <span class="lang-en">{{ cat.name }}</span>
+                <span class="lang-ar" style="display:none">{{ cat.label_ar }}</span>
+            </label>
+            {% endfor %}
+        </div>
+    </aside>
+
+    <main>
+        <div class="toolbar">
+            <div class="search-w">
+                <i class="fas fa-search s-icon"></i>
+                <input type="text" id="searchInput" class="search-i" placeholder="Search..." onkeyup="Lib.filter()">
+            </div>
+            <div style="font-size:0.9rem; color:var(--text-muted);">
+                <span id="resCount">{{ books|length }}</span> Books
+            </div>
+        </div>
+
+        <div class="books-grid" id="booksGrid">
+            {% for book in books %}
+            <div class="book-card b-item" onclick='Lib.openMega({{ book | json }})'
+                 data-cat="{{ book.category }}" data-status="{{ book.status }}"
+                 data-search="{{ book.title }} {{ book.title_ar }} {{ book.author }}">
+                
+                <div class="card-img" style="position:relative; overflow:hidden;">
+                    <img src="{{ book.cover_image or 'https://via.placeholder.com/400x600' }}" style="width:100%; height:100%; object-fit:cover;">
+                    <span class="st-badge bg-{{ book.status }}" style="position:absolute; top:10px; right:10px; z-index:2; color:white;">{{ book.status }}</span>
+                </div>
+                
+                <div class="card-body">
+                    <div class="c-cat">{{ book.category }}</div>
+                    <div class="c-title lang-en">{{ book.title }}</div>
+                    <div class="c-title lang-ar" style="display:none">{{ book.title_ar }}</div>
+                    <div class="c-auth">{{ book.author }}</div>
+                    
+                    <div class="c-foot">
+                        <span style="color:#FACC15"><i class="fas fa-star"></i> {{ book.rating }}</span>
+                        
+                        {% if book.user_action == 'return' %}
+                            <span class="st-badge" style="background:#fee2e2; color:#991b1b;"><i class="fas fa-undo"></i> With You</span>
+                        {% elif book.user_action == 'leave_queue' %}
+                            <span class="st-badge" style="background:#dbeafe; color:#1e40af;"><i class="fas fa-clock"></i> Queued</span>
+                        {% else %}
+                            <span style="font-size:0.8rem; color:var(--text-muted)">Details <i class="fas fa-arrow-right"></i></span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+</div>
+
+<div class="modal-overlay" id="modMega">
+    <div class="mega-box">
+        <img id="mmImg" class="mb-img">
+        <div class="mb-content">
+            <div id="mmCat" style="color:var(--brand-color); font-weight:800; margin-bottom:10px;">CAT</div>
+            <h2 id="mmTitle" style="font-size:2.5rem; line-height:1.1; margin-bottom:10px;">Title</h2>
+            <div id="mmAuth" style="color:var(--text-muted); margin-bottom:20px;">Author</div>
+            <div id="mmDesc" style="line-height:1.7; opacity:0.9; margin-bottom:30px; flex:1;">Desc</div>
+            
+            <div style="display:flex; gap:30px; margin-bottom:30px; padding:20px; background:var(--bg-body); border-radius:12px;">
+                <div><div style="font-size:0.7rem; text-transform:uppercase;">Price</div><div id="mmPrice" style="font-weight:800; font-size:1.2rem;">0</div></div>
+                <div><div style="font-size:0.7rem; text-transform:uppercase;">Rating</div><div id="mmRate" style="font-weight:800; font-size:1.2rem; color:#FACC15;">0</div></div>
+            </div>
+
+            <button id="mmBtn" class="mb-btn btn-borrow" onclick="Lib.preCheckAction()">Action</button>
+            <div style="margin-top:15px; text-align:center; cursor:pointer; color:var(--text-muted)" onclick="Lib.closeAll()">Close</div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modWarn">
+    <div class="otp-box">
+        <div class="warn-icon"><i class="fas fa-exclamation-triangle"></i></div>
+        <h3 data-i18n="w_title" style="font-weight:900; margin-bottom:10px;">Leave Queue?</h3>
+        <p data-i18n="w_msg" style="color:var(--text-muted); margin-bottom:25px;">You will lose your spot and your reservation fee.</p>
+        
+        <button class="mb-btn btn-return" onclick="Lib.callBackend('leave_queue')">Yes, Leave Queue</button>
+        <div style="margin-top:20px; cursor:pointer; color:var(--text-muted)" onclick="Lib.closeAll()">Cancel</div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modOTP">
+    <div class="otp-box">
+        <h3 id="otpTitle" style="font-weight:900;">Verify</h3>
+        <p id="otpText" style="color:var(--text-muted); margin-bottom:20px;">Enter code</p>
+        
+        <div id="starArea" style="display:none; margin-bottom:20px; font-size:2rem; color:#cbd5e1; cursor:pointer;">
+            <i class="far fa-star" onclick="Lib.rate(1)"></i>
+            <i class="far fa-star" onclick="Lib.rate(2)"></i>
+            <i class="far fa-star" onclick="Lib.rate(3)"></i>
+            <i class="far fa-star" onclick="Lib.rate(4)"></i>
+            <i class="far fa-star" onclick="Lib.rate(5)"></i>
+        </div>
+
+        <input type="text" id="otpIn" class="otp-inp" maxlength="6" placeholder="000000">
+        
+        <div class="otp-meta">
+            <span><i class="far fa-clock"></i> <span id="timer">01:00</span></span>
+            <span id="resendBtn" class="resend-lnk disabled" onclick="Lib.resend()">Resend Code</span>
+        </div>
+
+        <button class="mb-btn btn-borrow" onclick="Lib.confirm()" id="btnConf">Confirm</button>
+        <div style="margin-top:20px; cursor:pointer; color:var(--text-muted)" onclick="Lib.closeAll()">Cancel</div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modStatus">
+    <div class="status-box">
+        <div id="stIcon" class="st-icon"><i class="fas fa-check-circle"></i></div>
+        <h3 id="stTitle">Success</h3>
+        <p id="stMsg" style="color:var(--text-muted); margin-bottom:20px;">Done</p>
+        <button class="mb-btn btn-borrow" onclick="location.reload()">OK</button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+    const Lib = {
+        currBook: null,
+        currAction: null,
+        rating: 0,
+        timer: null,
+        timeLeft: 60,
+
+        dict: {
+            'en': {
+                'f_status': 'Status', 'st_avail': 'Available', 'st_borrow': 'Borrowed',
+                'f_cat': 'Categories', 'all_cats': 'All',
+                'btn_borrow': 'Borrow Now', 'btn_return': 'Return Book', 'btn_reserve': 'Join Queue', 'btn_claim': 'Claim Book', 'btn_leave': 'Leave Queue',
+                'otp_t': 'Security Check', 'otp_m': 'Code sent to email.',
+                'st_suc': 'Success!', 'st_err': 'Error!',
+                'w_title': 'Leave Queue?', 'w_msg': 'You will lose your spot and reservation fee.'
+            },
+            'ar': {
+                'f_status': 'الحالة', 'st_avail': 'متاح', 'st_borrow': 'مستعار',
+                'f_cat': 'التصنيفات', 'all_cats': 'الكل',
+                'btn_borrow': 'استعار الآن', 'btn_return': 'إرجاع الكتاب', 'btn_reserve': 'حجز (طابور)', 'btn_claim': 'استلام الكتاب', 'btn_leave': 'إلغاء الحجز',
+                'otp_t': 'تحقق أمني', 'otp_m': 'تم إرسال الرمز.',
+                'st_suc': 'تم بنجاح!', 'st_err': 'خطأ!',
+                'w_title': 'إلغاء الحجز؟', 'w_msg': 'ستفقد مكانك في الطابور ولن يتم استرداد العربون.'
+            }
+        },
+
+        init() {
+            this.updateLang();
+            window.addEventListener('lms-ui-update', () => this.updateLang());
+        },
+
+        updateLang() {
+            const lang = localStorage.getItem('lms_lang') || 'en';
+            const texts = this.dict[lang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if(texts[key]) el.innerText = texts[key];
+            });
+            if(lang==='ar') {
+                document.querySelectorAll('.lang-en').forEach(e=>e.style.display='none');
+                document.querySelectorAll('.lang-ar').forEach(e=>e.style.display='block');
+            } else {
+                document.querySelectorAll('.lang-ar').forEach(e=>e.style.display='none');
+                document.querySelectorAll('.lang-en').forEach(e=>e.style.display='block');
+            }
+        },
+
+        filter() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const cat = document.querySelector('input[name="cat"]:checked').value;
+            const sts = Array.from(document.querySelectorAll('.sidebar input[type="checkbox"]:checked')).map(c=>c.value);
+            
+            let count = 0;
+            document.querySelectorAll('.b-item').forEach(el => {
+                const bSearch = el.dataset.search.toLowerCase();
+                const bCat = el.dataset.cat;
+                const bSt = el.dataset.status;
+                
+                const matchSearch = bSearch.includes(search);
+                const matchCat = cat === 'all' || bCat === cat;
+                
+                let matchStatus = false;
+                if(sts.includes('Available') && bSt === 'Available') matchStatus = true;
+                if(sts.includes('Borrowed') && (bSt === 'Borrowed' || bSt === 'Reserved')) matchStatus = true;
+                if(sts.length === 0) matchStatus = false;
+
+                if(matchSearch && matchCat && matchStatus) {
+                    el.style.display = 'flex'; count++;
+                } else {
+                    el.style.display = 'none';
+                }
+            });
+            document.getElementById('resCount').innerText = count;
+        },
+
+        openMega(book) {
+            this.currBook = book;
+            const lang = localStorage.getItem('lms_lang') || 'en';
+            const isAr = lang === 'ar';
+            const txt = this.dict[lang];
+
+            document.getElementById('mmImg').src = book.cover_image;
+            document.getElementById('mmCat').innerText = book.category;
+            document.getElementById('mmTitle').innerText = isAr ? book.title_ar : book.title;
+            document.getElementById('mmAuth').innerText = isAr ? book.author_ar : book.author;
+            document.getElementById('mmDesc').innerHTML = isAr ? book.description_ar : book.description;
+            document.getElementById('mmRate').innerHTML = `<i class="fas fa-star"></i> ${book.rating}`;
+            
+            const btn = document.getElementById('mmBtn');
+            const pr = document.getElementById('mmPrice');
+            btn.className = 'mb-btn'; // reset
+
+            if(book.user_action === 'return') {
+                this.currAction = 'return';
+                btn.classList.add('btn-return');
+                btn.innerHTML = `<i class="fas fa-undo"></i> ${txt.btn_return}`;
+                pr.innerText = "-";
+            } else if (book.user_action === 'leave_queue') {
+                this.currAction = 'leave_queue';
+                btn.classList.add('btn-leave');
+                btn.innerHTML = `<i class="fas fa-times"></i> ${txt.btn_leave}`;
+                pr.innerText = "-";
+            } else if (book.user_action === 'claim') {
+                this.currAction = 'borrow';
+                btn.classList.add('btn-borrow');
+                btn.innerHTML = `<i class="fas fa-check"></i> ${txt.btn_claim}`;
+                pr.innerText = `${parseInt(book.rental_price)} EGP`;
+            } else if (book.status === 'Available') {
+                this.currAction = 'borrow';
+                btn.classList.add('btn-borrow');
+                btn.innerHTML = `<i class="fas fa-book"></i> ${txt.btn_borrow}`;
+                pr.innerText = `${parseInt(book.rental_price)} EGP`;
+            } else {
+                this.currAction = 'reserve';
+                btn.classList.add('btn-reserve');
+                btn.innerHTML = `<i class="fas fa-clock"></i> ${txt.btn_reserve}`;
+                pr.innerText = "20 EGP";
+            }
+
+            document.getElementById('modMega').classList.add('active');
+        },
+
+        // --- PRE-CHECK: DOES THIS NEED A WARNING? ---
+        preCheckAction() {
+            if (this.currAction === 'leave_queue') {
+                document.getElementById('modMega').classList.remove('active');
+                document.getElementById('modWarn').classList.add('active');
+            } else {
+                // Normal actions go to backend for OTP
+                this.callBackend(this.currAction);
+            }
+        },
+
+        async callBackend(action) {
+            this.closeAll();
+            const csrfToken = "{{ csrf_token }}";
+
+            try {
+                const res = await fetch('/api/method/lms_portal.library_ops.initiate_action', {
+                    method: 'POST',
+                    headers: { 
+                        'X-Frappe-CSRF-Token': csrfToken,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                    },
+                    body: new URLSearchParams({ action: action, book_name: this.currBook.name })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    // --- تحسين التقاط رسائل الخطأ من Frappe ---
+                    let errorMessage = "حدث خطأ في النظام";
+                    
+                    if (data._server_messages) {
+                        // استخراج الرسالة من تنسيق Frappe الخاص
+                        const messages = JSON.parse(data._server_messages);
+                        const firstMsg = JSON.parse(messages[0]);
+                        errorMessage = firstMsg.message;
+                    } else if (data.exception) {
+                        // إذا كان هناك خطأ تقني واضح
+                        errorMessage = data.exception.split(':').pop();
+                    }
+
+                    this.showStatus('error', errorMessage);
+                    return;
+                }
+
+                // في حال النجاح (Status 200)
+                if(data.message && data.message.status === 'done') {
+                    this.showStatus('success', data.message.message);
+                } 
+                else if(data.message && data.message.status === 'otp_sent') {
+                    this.openOTP(data.message.amount);
+                }
+            } catch(e) { 
+                console.error(e); 
+                this.showStatus('error', "تعذر الاتصال بالسيرفر"); 
+            }
+        },
+        
+        openOTP(amount) {
+            document.getElementById('modOTP').classList.add('active');
+            document.getElementById('otpIn').value = '';
+            document.getElementById('otpIn').focus();
+            
+            document.getElementById('starArea').style.display = this.currAction === 'return' ? 'flex' : 'none';
+            
+            const lang = localStorage.getItem('lms_lang') || 'en';
+            let msg = this.dict[lang].otp_m;
+            if(amount > 0) msg += ` <br><b style="color:#F59E0B; font-size:1.2rem;">PAY: ${amount} EGP</b>`;
+            document.getElementById('otpText').innerHTML = msg;
+
+            this.startTimer();
+        },
+
+        startTimer() {
+            this.timeLeft = 60;
+            const lnk = document.getElementById('resendBtn');
+            lnk.classList.add('disabled');
+            
+            if(this.timer) clearInterval(this.timer);
+            this.timer = setInterval(() => {
+                this.timeLeft--;
+                const m = Math.floor(this.timeLeft / 60);
+                const s = this.timeLeft % 60;
+                document.getElementById('timer').innerText = `0${m}:${s<10?'0'+s:s}`;
+                
+                if(this.timeLeft <= 0) {
+                    clearInterval(this.timer);
+                    lnk.classList.remove('disabled');
+                }
+            }, 1000);
+        },
+
+        async resend() {
+            if(this.timeLeft > 0) return;
+            this.callBackend(this.currAction);
+        },
+
+        rate(n) {
+            this.rating = n;
+            document.querySelectorAll('#starArea i').forEach((el, i) => {
+                el.className = i < n ? 'fas fa-star' : 'far fa-star';
+            });
+        },
+
+        async confirm() {
+            const otp = document.getElementById('otpIn').value;
+            if(otp.length < 6) return;
+            
+            const btn = document.getElementById('btnConf');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            try {
+                const formData = new FormData();
+                formData.append('otp', otp);
+                if(this.currAction === 'return') formData.append('rating', this.rating);
+
+                const res = await fetch('/api/method/lms_portal.library_ops.confirm_action', {
+                    method: 'POST',
+                    headers: { 'X-Frappe-CSRF-Token': "{{ frappe.session.csrf_token }}" },
+                    body: formData
+                });
+                
+                const data = await res.json();
+                this.closeAll();
+                
+                if(data.message && data.message.status === 'success') {
+                    this.showStatus('success', "Operation Complete!");
+                } else {
+                    this.showStatus('error', "Invalid OTP Code");
+                }
+            } catch(e) { this.showStatus('error', "Failed"); }
+            btn.innerHTML = 'Confirm';
+        },
+
+        showStatus(type, msg) {
+            const box = document.getElementById('modStatus');
+            const icon = document.getElementById('stIcon');
+            const title = document.getElementById('stTitle');
+            const lang = localStorage.getItem('lms_lang') || 'en';
+            
+            if(type === 'success') {
+                icon.innerHTML = '<i class="fas fa-check-circle"></i>';
+                icon.className = 'st-icon st-success';
+                title.innerText = this.dict[lang].st_suc;
+            } else {
+                icon.innerHTML = '<i class="fas fa-times-circle"></i>';
+                icon.className = 'st-icon st-error';
+                title.innerText = this.dict[lang].st_err;
+            }
+            document.getElementById('stMsg').innerText = msg;
+            box.classList.add('active');
+        },
+
+        closeAll() {
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+            if(this.timer) clearInterval(this.timer);
+        }
+    };
+    Lib.init();
+</script>
+{% endblock %}

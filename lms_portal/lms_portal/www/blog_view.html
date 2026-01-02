@@ -1,0 +1,267 @@
+{% extends "lms_portal/www/base.html" %}
+
+{% block title %}{{ blog.title_en }} | LMS Elite{% endblock %}
+
+{% block head_css %}
+<style>
+    /* --- HEADER (Parallax Style) --- */
+    .article-hero {
+        width: 100%; height: 500px; position: relative;
+        background-color: var(--bg-surface);
+        overflow: hidden;
+    }
+    .hero-img {
+        width: 100%; height: 100%; object-fit: cover;
+        filter: brightness(0.6);
+    }
+    .hero-overlay {
+        position: absolute; inset: 0;
+        display: flex; flex-direction: column; justify-content: flex-end;
+        padding: 0 20px 80px; text-align: center;
+        background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+    }
+    
+    .article-tag {
+        display: inline-block; padding: 6px 14px; margin: 0 auto 20px;
+        background: var(--brand-color); color: white; border-radius: 50px;
+        font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;
+    }
+    
+    .article-h1 {
+        font-size: 3.5rem; font-weight: 900; line-height: 1.1; color: white;
+        margin-bottom: 20px; max-width: 1000px; margin-left: auto; margin-right: auto;
+        text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    
+    .article-meta {
+        color: rgba(255,255,255,0.8); font-size: 1rem;
+        display: flex; justify-content: center; gap: 20px; font-weight: 500;
+    }
+    
+    @media (max-width: 768px) { .article-h1 { font-size: 2.2rem; } .article-hero { height: 400px; } }
+
+    /* --- CONTENT BODY --- */
+    .content-wrapper {
+        max-width: 840px; margin: -60px auto 60px;
+        background: var(--bg-surface); border-radius: 20px;
+        padding: 60px; box-shadow: var(--shadow-float);
+        position: relative; z-index: 10; border: 1px solid var(--border-color);
+    }
+    
+    .prose { font-size: 1.2rem; line-height: 1.8; color: var(--text-main); }
+    .prose p { margin-bottom: 25px; }
+    .prose h3 { font-size: 2rem; font-weight: 800; margin: 50px 0 20px; color: var(--text-main); }
+    
+    .prose blockquote {
+        border: none; margin: 40px 0; padding: 40px;
+        background: var(--bg-body); border-radius: 16px;
+        font-size: 1.4rem; font-style: italic; color: var(--text-main);
+        text-align: center; position: relative;
+    }
+    .prose blockquote::before {
+        content: '\201C'; font-size: 5rem; color: var(--brand-color); opacity: 0.3;
+        position: absolute; top: -10px; left: 20px; font-family: serif;
+    }
+
+    /* --- COMMENTS --- */
+    .comments-sec { max-width: 840px; margin: 0 auto 60px; padding: 0 20px; }
+    .section-head { 
+        font-size: 1.8rem; font-weight: 800; margin-bottom: 30px; 
+        border-bottom: 2px solid var(--border-color); padding-bottom: 15px;
+    }
+
+    .comment-box {
+        background: var(--bg-surface); padding: 30px; border-radius: 20px;
+        box-shadow: var(--shadow-md); margin-bottom: 50px;
+        border: 1px solid var(--border-color);
+    }
+    .c-input {
+        width: 100%; border: 2px solid var(--border-color); border-radius: 12px;
+        background: var(--bg-body); padding: 20px; min-height: 120px;
+        font-size: 1rem; color: var(--text-main); margin-bottom: 20px;
+        transition: 0.3s;
+    }
+    .c-input:focus { border-color: var(--brand-color); }
+
+    .c-list { display: flex; flex-direction: column; gap: 25px; }
+    .c-item { display: flex; gap: 20px; animation: fadeIn 0.5s; }
+    
+    .c-avatar {
+        width: 50px; height: 50px; border-radius: 50%;
+        background: linear-gradient(135deg, var(--brand-color), #60A5FA);
+        color: white; display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 1.2rem; flex-shrink: 0;
+        box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+        overflow: hidden; /* Important for image clipping */
+    }
+    .c-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    
+    .c-bubble {
+        flex: 1; background: var(--bg-surface); padding: 20px; border-radius: 0 20px 20px 20px;
+        border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);
+    }
+    html[dir="rtl"] .c-bubble { border-radius: 20px 0 20px 20px; }
+
+    .c-head { display: flex; justify-content: space-between; margin-bottom: 8px; }
+    .c-name { font-weight: 700; font-size: 1rem; }
+    .c-date { font-size: 0.8rem; color: var(--text-muted); }
+    .c-text { line-height: 1.6; color: var(--text-main); margin: 0; }
+
+    @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform:translateY(0); } }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="article-hero">
+    <img src="{{ blog.cover_image or 'https://via.placeholder.com/1500x800' }}" class="hero-img" alt="Cover">
+    <div class="hero-overlay">
+        <span class="article-tag">{{ blog.tags }}</span>
+        
+        <h1 class="article-h1 lang-en">{{ blog.title_en }}</h1>
+        <h1 class="article-h1 lang-ar" style="display:none;">{{ blog.title_ar }}</h1>
+        
+        <div class="article-meta">
+            <span><i class="fas fa-user"></i> {{ blog.author }}</span>
+            <span>&bull;</span>
+            <span><i class="far fa-clock"></i> {{ blog.read_time }} min read</span>
+            <span>&bull;</span>
+            <span>{{ blog.creation.strftime('%d %b %Y') }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="content-wrapper">
+    <div class="prose">
+        <div class="lang-en">{{ blog.content_en }}</div>
+        <div class="lang-ar" style="display:none;">{{ blog.content_ar }}</div>
+    </div>
+</div>
+
+<div class="comments-sec">
+    <h3 class="section-head" data-i18n="h_comments">Discussion</h3>
+
+    <div class="comment-box">
+        <textarea id="commentText" class="c-input" placeholder="Join the conversation..."></textarea>
+        <button class="btn-elite btn-primary-glow" onclick="BlogApp.postComment()" style="width: 100%; justify-content: center;">
+            <i class="fas fa-paper-plane"></i> <span data-i18n="btn_post">Post Comment</span>
+        </button>
+    </div>
+
+    <div class="c-list" id="commentList">
+        {% for c in comments %}
+        <div class="c-item">
+            <div class="c-avatar">
+                {% if c.avatar %}
+                    <img src="{{ c.avatar }}" alt="{{ c.user_name }}">
+                {% else %}
+                    {{ c.user_name[0] | upper }}
+                {% endif %}
+            </div>
+            
+            <div class="c-bubble">
+                <div class="c-head">
+                    <span class="c-name">{{ c.user_name }}</span>
+                    <span class="c-date">{{ c.creation.strftime('%d %b, %H:%M') }}</span>
+                </div>
+                <p class="c-text">{{ c.comment }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+    const BlogApp = {
+        blogName: "{{ blog.name }}",
+        
+        dict: {
+            'en': { 'h_comments': 'Discussion', 'btn_post': 'Post Comment', 'ph_comment': 'Join the conversation...' },
+            'ar': { 'h_comments': 'المناقشة', 'btn_post': 'نشر التعليق', 'ph_comment': 'شاركنا برأيك في المحادثة...' }
+        },
+
+        init() {
+            this.updateLang();
+            window.addEventListener('lms-ui-update', () => this.updateLang());
+        },
+
+        updateLang() {
+            const lang = localStorage.getItem('lms_lang') || 'en';
+            
+            const texts = this.dict[lang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if(texts[key]) el.innerText = texts[key];
+            });
+            document.getElementById('commentText').placeholder = texts['ph_comment'];
+
+            if (lang === 'ar') {
+                document.querySelectorAll('.lang-en').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.lang-ar').forEach(el => el.style.display = 'block');
+            } else {
+                document.querySelectorAll('.lang-ar').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.lang-en').forEach(el => el.style.display = 'block');
+            }
+        },
+
+        async postComment() {
+            const txt = document.getElementById('commentText').value;
+            if(!txt) return;
+
+            const btn = document.querySelector('.btn-primary-glow');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('blog_name', this.blogName);
+                formData.append('comment_text', txt);
+
+                const response = await fetch('/api/method/lms_portal.www.blog_view.post_comment', {
+                    method: 'POST',
+                    headers: { 'X-Frappe-CSRF-Token': "{{ frappe.session.csrf_token }}" },
+                    body: formData
+                });
+
+                if(response.ok) {
+                    const res = await response.json();
+                    this.addCommentToUI(res.message);
+                    document.getElementById('commentText').value = '';
+                }
+            } catch(e) { console.error(e); }
+
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        },
+
+        addCommentToUI(data) {
+            // Check if avatar URL exists in response
+            let avatarHTML = '';
+            if (data.avatar) {
+                avatarHTML = `<img src="${data.avatar}" alt="${data.user}">`;
+            } else {
+                avatarHTML = data.user[0].toUpperCase();
+            }
+
+            const html = `
+            <div class="c-item">
+                <div class="c-avatar">${avatarHTML}</div>
+                <div class="c-bubble">
+                    <div class="c-head">
+                        <span class="c-name">${data.user}</span>
+                        <span class="c-date">Just now</span>
+                    </div>
+                    <p class="c-text">${data.text}</p>
+                </div>
+            </div>`;
+            document.getElementById('commentList').insertAdjacentHTML('afterbegin', html);
+        }
+    };
+
+    BlogApp.init();
+</script>
+{% endblock %}

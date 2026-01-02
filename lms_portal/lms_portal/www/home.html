@@ -1,0 +1,378 @@
+{% extends "lms_portal/www/base.html" %}
+
+{% block title %}LMS Elite - Dominate Your Field{% endblock %}
+
+{% block head_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+<style>
+    /* --- POWER VARIABLES --- */
+    :root {
+        --power-color: #2563EB;
+        --accent-color: #FACC15; /* Yellow for attention */
+        --dark-bg: #0f172a;
+    }
+
+    /* --- ANIMATIONS --- */
+    .fade-up { opacity: 0; transform: translateY(40px); transition: all 0.8s ease-out; }
+    .fade-up.visible { opacity: 1; transform: translateY(0); }
+
+    /* --- 1. HERO SECTION (MARKETING MONSTER) --- */
+    .power-hero {
+        position: relative; min-height: 95vh; display: flex; align-items: center;
+        background: var(--dark-bg); overflow: hidden; margin-top: -90px; padding-top: 90px;
+    }
+    .hero-vid-bg {
+        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+        opacity: 0.4; filter: contrast(1.2) brightness(0.6);
+    }
+    .hero-container {
+        position: relative; z-index: 10; width: 100%; max-width: 1400px; margin: 0 auto; padding: 0 30px;
+        display: grid; grid-template-columns: 1.5fr 1fr; gap: 50px; align-items: center;
+    }
+    
+    .hero-tag {
+        background: var(--accent-color); color: black; font-weight: 900; padding: 5px 15px;
+        text-transform: uppercase; letter-spacing: 2px; display: inline-block; margin-bottom: 20px;
+        clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);
+    }
+    
+    .hero-h1 {
+        font-size: 5rem; font-weight: 900; line-height: 0.95; color: white; margin-bottom: 30px;
+        text-transform: uppercase; letter-spacing: -2px;
+    }
+    .hero-h1 span { color: var(--power-color); -webkit-text-stroke: 1px rgba(255,255,255,0.2); }
+    
+    .hero-sub { font-size: 1.4rem; color: #cbd5e1; margin-bottom: 50px; line-height: 1.6; max-width: 600px; border-left: 4px solid var(--power-color); padding-inline-start: 20px; }
+    
+    .cta-group { display: flex; gap: 20px; }
+    .btn-power {
+        padding: 20px 50px; font-weight: 900; font-size: 1.1rem; text-transform: uppercase;
+        background: var(--power-color); color: white; border: none; cursor: pointer;
+        transition: 0.3s; clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+    }
+    .btn-power:hover { transform: scale(1.05); filter: brightness(1.2); box-shadow: 0 0 30px rgba(37,99,235,0.6); }
+    
+    .btn-outline-power {
+        padding: 20px 50px; font-weight: 900; font-size: 1.1rem; text-transform: uppercase;
+        background: transparent; color: white; border: 2px solid white; cursor: pointer;
+        transition: 0.3s;
+    }
+    .btn-outline-power:hover { background: white; color: black; }
+
+    /* Hero Visual (3D Floating Books) */
+    .hero-visual { position: relative; height: 600px; display: flex; align-items: center; justify-content: center; perspective: 1000px; }
+    .floating-card {
+        width: 300px; position: absolute; border-radius: 15px; box-shadow: 0 50px 100px rgba(0,0,0,0.5);
+        transition: 0.5s; animation: float 6s infinite ease-in-out;
+    }
+    .fc-1 { z-index: 3; transform: rotateY(-10deg); }
+    .fc-2 { z-index: 2; transform: translate(150px, -50px) rotateY(-20deg) scale(0.9); opacity: 0.7; animation-delay: 1s; }
+    .fc-3 { z-index: 1; transform: translate(-150px, -50px) rotateY(10deg) scale(0.9); opacity: 0.7; animation-delay: 2s; }
+    @keyframes float { 0%, 100% { transform: translateY(0) rotateY(-10deg); } 50% { transform: translateY(-20px) rotateY(-10deg); } }
+
+    /* --- 2. STATS BAR (Social Proof) --- */
+    .stats-strip {
+        background: var(--power-color); color: white; padding: 40px 0; margin-top: -50px; position: relative; z-index: 20;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.3); transform: skewY(-2deg);
+    }
+    .stats-content { transform: skewY(2deg); max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 30px; }
+    .stat-box { text-align: center; }
+    .stat-n { font-size: 3rem; font-weight: 900; display: block; line-height: 1; }
+    .stat-l { font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; }
+
+    /* --- 3. BOOK SHOWCASE (The Products) --- */
+    .section-tit { text-align: center; margin-bottom: 60px; }
+    .st-sub { color: var(--power-color); font-weight: 900; letter-spacing: 3px; text-transform: uppercase; font-size: 0.9rem; }
+    .st-main { font-size: 3.5rem; font-weight: 900; text-transform: uppercase; color: var(--text-main); }
+    
+    .swiper-books { padding: 50px 20px; }
+    .book-card {
+        width: 320px; background: var(--bg-surface); border-radius: 20px; overflow: hidden;
+        border: 1px solid var(--border-color); transition: 0.4s; position: relative;
+    }
+    .book-card:hover { transform: translateY(-15px); box-shadow: 0 30px 60px rgba(0,0,0,0.15); border-color: var(--power-color); }
+    .bc-img { width: 100%; height: 400px; object-fit: cover; }
+    .bc-body { padding: 25px; }
+    .bc-cat { color: var(--power-color); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; }
+    .bc-title { font-size: 1.3rem; font-weight: 800; margin: 5px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bc-rating { color: var(--accent-color); font-weight: 700; margin-bottom: 15px; }
+    
+    .btn-card {
+        display: block; width: 100%; padding: 15px; background: var(--bg-body); color: var(--text-main);
+        text-align: center; font-weight: 800; text-transform: uppercase; border-radius: 10px; transition: 0.3s;
+    }
+    .book-card:hover .btn-card { background: var(--power-color); color: white; }
+
+    /* --- 4. MEMBERSHIP (The Sale) --- */
+    .membership-sec { background: var(--bg-body); padding: 100px 0; position: relative; clip-path: polygon(0 0, 100% 5%, 100% 100%, 0 95%); }
+    .plan-card {
+        background: var(--bg-surface); padding: 50px; border-radius: 30px; text-align: center;
+        border: 1px solid var(--border-color); transition: 0.3s; position: relative; overflow: hidden;
+    }
+    .plan-card.featured { border: 3px solid var(--power-color); transform: scale(1.05); z-index: 2; box-shadow: 0 40px 80px rgba(37,99,235,0.15); }
+    .best-val {
+        position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+        background: var(--accent-color); color: black; font-weight: 900; padding: 5px 20px;
+        border-bottom-left-radius: 15px; border-bottom-right-radius: 15px; text-transform: uppercase; font-size: 0.8rem;
+    }
+    .pc-price { font-size: 4rem; font-weight: 900; color: var(--text-main); margin: 30px 0; }
+    .pc-feat { list-style: none; padding: 0; text-align: start; margin-bottom: 40px; }
+    .pc-feat li { padding: 15px 0; border-bottom: 1px solid var(--border-color); font-weight: 600; display: flex; align-items: center; gap: 10px; }
+    .pc-feat li i { color: #10B981; }
+
+    /* --- 5. TESTIMONIALS (Social Proof) --- */
+    .test-slider { padding: 50px 0; }
+    .t-card {
+        background: var(--bg-surface); padding: 40px; border-radius: 20px; border: 1px solid var(--border-color);
+        display: flex; gap: 20px; align-items: start; transition: 0.3s;
+    }
+    .t-card:hover { border-color: var(--power-color); box-shadow: var(--shadow-sm); }
+    .t-img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid var(--bg-body); }
+    .t-quote { font-size: 1.1rem; font-style: italic; line-height: 1.6; color: var(--text-main); opacity: 0.8; }
+
+    /* --- 6. CTA MAP (The Closer) --- */
+    .cta-map-sec {
+        height: 600px; position: relative; margin-top: 100px;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .cta-map-bg { position: absolute; inset: 0; width: 100%; height: 100%; filter: grayscale(1); z-index: 1; }
+    .cta-card-float {
+        position: relative; z-index: 5; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
+        padding: 60px 80px; border-radius: 40px; text-align: center; box-shadow: 0 50px 100px rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.5); max-width: 800px;
+    }
+    [data-theme="dark"] .cta-card-float { background: rgba(15,23,42,0.95); border-color: rgba(255,255,255,0.1); }
+
+    @media (max-width: 900px) {
+        .hero-container { grid-template-columns: 1fr; text-align: center; padding-top: 50px; }
+        .hero-visual { display: none; }
+        .hero-h1 { font-size: 3.5rem; }
+        .stats-content { flex-direction: column; gap: 40px; }
+        .plan-card.featured { transform: scale(1); }
+        .cta-card-float { width: 90%; padding: 40px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="power-hero">
+    <video autoplay muted loop class="hero-vid-bg">
+        <source src="https://videos.pexels.com/video-files/3195987/3195987-hd_1920_1080_25fps.mp4" type="video/mp4">
+    </video>
+    <div class="hero-container">
+        
+        <div>
+            <span class="hero-tag">#1 Knowledge Platform</span>
+            <h1 class="hero-h1 lang-en">Dominate <br>Your <span>Field</span></h1>
+            <h1 class="hero-h1 lang-ar" style="display:none;">سيطر على <br><span>مجالك</span></h1>
+            
+            <p class="hero-sub lang-en">
+                Stop reading random articles. Access a curated library of world-class books that give you the unfair advantage in your career and life.
+            </p>
+            <p class="hero-sub lang-ar" style="display:none;">
+                توقف عن القراءة العشوائية. احصل على مكتبة منتقاة من كتب عالمية تمنحك ميزة تنافسية غير عادلة في حياتك المهنية.
+            </p>
+            
+            <div class="cta-group">
+                <a href="/memberships" class="btn-power" data-i18n="btn_join">Get Started</a>
+                <a href="/library" class="btn-outline-power" data-i18n="btn_explore">Explore Books</a>
+            </div>
+        </div>
+
+        <div class="hero-visual">
+            {% if power_books[0] %}<img src="{{ power_books[0].cover_image }}" class="floating-card fc-1">{% endif %}
+            {% if power_books[1] %}<img src="{{ power_books[1].cover_image }}" class="floating-card fc-2">{% endif %}
+            {% if power_books[2] %}<img src="{{ power_books[2].cover_image }}" class="floating-card fc-3">{% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="stats-strip">
+    <div class="stats-content">
+        <div class="stat-box">
+            <span class="stat-n counter" data-target="{{ stats.books }}">0</span>
+            <span class="stat-l" data-i18n="st_books">Books Available</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-n counter" data-target="{{ stats.members }}">0</span>
+            <span class="stat-l" data-i18n="st_members">Elite Members</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-n counter" data-target="{{ stats.loans }}">0</span>
+            <span class="stat-l" data-i18n="st_loans">Books Read</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-n counter" data-target="{{ stats.reviews }}">0</span>
+            <span class="stat-l" data-i18n="st_rev">5-Star Reviews</span>
+        </div>
+    </div>
+</div>
+
+<div class="sec-gap fade-up">
+    <div class="section-tit">
+        <span class="st-sub" data-i18n="sub_trend">Trending Now</span>
+        <h2 class="st-main lang-en">Masterpieces</h2>
+        <h2 class="st-main lang-ar" style="display:none;">روائع مختارة</h2>
+    </div>
+    
+    <div class="swiper swiper-books">
+        <div class="swiper-wrapper">
+            {% for book in power_books %}
+            <div class="swiper-slide book-card" onclick="window.location.href='/library'">
+                <img src="{{ book.cover_image or 'https://via.placeholder.com/300x450' }}" class="bc-img">
+                <div class="bc-body">
+                    <div class="bc-cat">{{ book.category }}</div>
+                    <div class="bc-title lang-en">{{ book.title }}</div>
+                    <div class="bc-title lang-ar" style="display:none">{{ book.title_ar }}</div>
+                    <div class="bc-rating">
+                        <i class="fas fa-star"></i> {{ book.rating }}
+                    </div>
+                    <span class="btn-card" data-i18n="btn_view">View Details</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="membership-sec fade-up">
+    <div class="section-tit">
+        <span class="st-sub" data-i18n="sub_plans">Invest In Yourself</span>
+        <h2 class="st-main lang-en">Choose Power</h2>
+        <h2 class="st-main lang-ar" style="display:none;">اختر قوتك</h2>
+    </div>
+
+    <div class="container">
+        <div class="row g-4 justify-content-center">
+            {% for plan in plans %}
+            <div class="col-lg-4 col-md-6">
+                <div class="plan-card {% if loop.index == 2 %}featured{% endif %}">
+                    {% if loop.index == 2 %}<div class="best-val">Best Value</div>{% endif %}
+                    
+                    <h3 class="lang-en" style="font-weight:900; text-transform:uppercase;">{{ plan.tier_name }}</h3>
+                    <h3 class="lang-ar" style="font-weight:900; display:none; text-transform:uppercase;">{{ plan.tier_name_ar }}</h3>
+                    
+                    <div class="pc-price">{{ plan.price|int }} <span style="font-size:1rem; color:var(--text-muted);">/mo</span></div>
+                    
+                    <ul class="pc-feat">
+                        <li><i class="fas fa-check-circle"></i> Borrow <b>{{ plan.max_books }} Books</b></li>
+                        <li><i class="fas fa-check-circle"></i> Keep for <b>{{ plan.max_days }} Days</b></li>
+                        <li><i class="fas fa-check-circle"></i> Premium Support</li>
+                    </ul>
+                    
+                    <a href="/memberships" class="btn-power" style="width:100%; display:block; border-radius:10px;" data-i18n="btn_select">Select Plan</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="sec-gap fade-up">
+    <div class="section-tit">
+        <span class="st-sub" data-i18n="sub_rev">Community</span>
+        <h2 class="st-main lang-en">What Elite Say</h2>
+        <h2 class="st-main lang-ar" style="display:none;">أصوات النخبة</h2>
+        <a href="/testimonials" class="btn-outline-power" style="color:var(--text-main); border-color:var(--text-main); margin-top:20px; display:inline-block; border-radius:50px; font-size:0.9rem;" data-i18n="btn_all_rev">Read All Reviews</a>
+    </div>
+
+    <div class="swiper swiper-test">
+        <div class="swiper-wrapper">
+            {% for t in testimonials %}
+            <div class="swiper-slide t-card">
+                <img src="{{ t.reviewer_image or 'https://ui-avatars.com/api/?name='+t.reviewer_name }}" class="t-img">
+                <div>
+                    <div class="lang-en t-quote">"{{ t.content_en }}"</div>
+                    <div class="lang-ar t-quote" style="display:none;">"{{ t.content_ar }}"</div>
+                    <div style="margin-top:15px; font-weight:800;">{{ t.reviewer_name }}</div>
+                    <div style="color:var(--text-muted); font-size:0.85rem;">{{ t.role }}</div>
+                    <div style="color:#FACC15; margin-top:5px;">
+                        {% for i in range(t.rating|int) %}<i class="fas fa-star"></i>{% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="cta-map-sec">
+    <iframe class="cta-map-bg" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3453.156091722879!2d31.23333067635832!3d30.060938617800537!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x145840c6600c6d7f%3A0x7b0e637775276c7!2sCairo%2C%20Cairo%20Governorate!5e0!3m2!1sen!2seg!4v1703640000000!5m2!1sen!2seg" frameborder="0"></iframe>
+    <div class="cta-card-float">
+        <h2 class="lang-en" style="font-size:3rem; font-weight:900; line-height:1; margin-bottom:20px;">Ready to Level Up?</h2>
+        <h2 class="lang-ar" style="font-size:3rem; font-weight:900; line-height:1; margin-bottom:20px; display:none;">مستعد للارتقاء؟</h2>
+        
+        <p class="lang-en" style="font-size:1.2rem; color:var(--text-main); margin-bottom:40px;">
+            Join the elite community today. Visit our HQ or start your journey online.
+        </p>
+        <p class="lang-ar" style="font-size:1.2rem; color:var(--text-main); margin-bottom:40px; display:none;">
+            انضم لمجتمع النخبة اليوم. زر مقرنا أو ابدأ رحلتك عبر الإنترنت.
+        </p>
+        
+        <div style="display:flex; gap:20px; justify-content:center;">
+            <a href="/sign_up" class="btn-power" style="border-radius:50px;" data-i18n="btn_join_now">Join Online</a>
+            <a href="/contact" class="btn-outline-power" style="border-radius:50px; color:var(--text-main); border-color:var(--text-main);" data-i18n="btn_dir">Get Directions</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script>
+    // 1. Books Carousel
+    new Swiper('.swiper-books', {
+        slidesPerView: 'auto',
+        spaceBetween: 30,
+        freeMode: true,
+        grabCursor: true
+    });
+
+    // 2. Testimonials
+    new Swiper('.swiper-test', {
+        slidesPerView: 1,
+        spaceBetween: 30,
+        loop: true,
+        autoplay: { delay: 3000 },
+        breakpoints: {
+            768: { slidesPerView: 2 },
+            1024: { slidesPerView: 3 }
+        }
+    });
+
+    // 3. Scroll Reveal Animation
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) entry.target.classList.add('visible');
+        });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+    // 4. Counters
+    document.querySelectorAll('.counter').forEach(counter => {
+        const target = +counter.getAttribute('data-target');
+        const inc = Math.ceil(target / 100);
+        let c = 0;
+        const update = () => {
+            c += inc;
+            if(c < target) { counter.innerText = c; setTimeout(update, 20); }
+            else { counter.innerText = target; }
+        };
+        update();
+    });
+
+    // 5. Language Sync
+    window.addEventListener('lms-ui-update', () => {
+        const lang = localStorage.getItem('lms_lang') || 'en';
+        if(lang === 'ar') {
+            document.querySelectorAll('.lang-en').forEach(e => e.style.display='none');
+            document.querySelectorAll('.lang-ar').forEach(e => e.style.display='block');
+        } else {
+            document.querySelectorAll('.lang-ar').forEach(e => e.style.display='none');
+            document.querySelectorAll('.lang-en').forEach(e => e.style.display='block');
+        }
+    });
+</script>
+{% endblock %}

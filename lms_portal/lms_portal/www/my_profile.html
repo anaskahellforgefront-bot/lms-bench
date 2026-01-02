@@ -1,0 +1,390 @@
+{% extends "lms_portal/www/base.html" %}
+
+{% block title %}My Profile | LMS Elite{% endblock %}
+
+{% block head_css %}
+<style>
+    /* LAYOUT */
+    .profile-container {
+        max-width: 1200px; margin: 40px auto; padding: 0 24px;
+        display: grid; grid-template-columns: 350px 1fr; gap: 30px;
+        animation: slideUp 0.5s ease-out;
+    }
+    @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+    @media (max-width: 992px) { .profile-container { grid-template-columns: 1fr; } }
+
+    /* CARDS */
+    .elite-card {
+        background: var(--bg-surface); border: 1px solid var(--border-color);
+        border-radius: 20px; overflow: hidden; position: relative;
+        box-shadow: var(--shadow-md);
+    }
+
+    /* LEFT SIDE */
+    .profile-header {
+        background: linear-gradient(135deg, var(--brand-color), #1e293b);
+        height: 120px;
+    }
+    .profile-avatar-wrap {
+        width: 120px; height: 120px; margin: -60px auto 15px;
+        border-radius: 50%; border: 4px solid var(--bg-surface);
+        background: var(--bg-body); position: relative;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        overflow: hidden; cursor: pointer; /* Clickable for Lightbox */
+    }
+    .profile-avatar {
+        width: 100%; height: 100%; object-fit: cover; transition: 0.3s;
+    }
+    .profile-avatar-wrap:hover .profile-avatar { transform: scale(1.05); }
+    
+    /* Edit Overlay (Buttons for Upload/Delete) */
+    .avatar-actions {
+        position: absolute; inset: 0; background: rgba(0,0,0,0.7);
+        display: none; align-items: center; justify-content: center; gap: 15px;
+        z-index: 10;
+    }
+    .action-circle {
+        width: 40px; height: 40px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; transition: 0.2s; color: white;
+        border: 2px solid rgba(255,255,255,0.2);
+    }
+    .btn-upload-icon { background: var(--brand-color); }
+    .btn-delete-icon { background: #EF4444; }
+    
+    .action-circle:hover { transform: scale(1.1); border-color: white; }
+
+    /* LIGHTBOX (View Image) */
+    .lightbox {
+        position: fixed; inset: 0; z-index: 9999;
+        background: rgba(0,0,0,0.9);
+        display: none; align-items: center; justify-content: center;
+        animation: fadeIn 0.3s;
+    }
+    .lightbox img {
+        max-width: 90%; max-height: 90vh; border-radius: 8px;
+        box-shadow: 0 0 30px rgba(0,0,0,0.5);
+    }
+    .lightbox-close {
+        position: absolute; top: 20px; right: 30px;
+        color: white; font-size: 2rem; cursor: pointer;
+    }
+
+    .identity-info { text-align: center; padding: 0 20px 30px; }
+    .user-name { font-size: 1.5rem; font-weight: 800; margin-bottom: 5px; color: var(--text-main); }
+    .user-email { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; }
+
+    .stat-badge {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: var(--brand-soft); color: var(--brand-color);
+        padding: 6px 14px; border-radius: 50px; font-weight: 600; font-size: 0.85rem;
+    }
+
+    /* RIGHT SIDE */
+    .form-header {
+        padding: 25px; border-bottom: 1px solid var(--border-color);
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .form-body { padding: 30px; }
+    
+    .input-group-grid {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;
+    }
+    
+    .input-label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.9rem; }
+    .input-field {
+        width: 100%; height: 50px; padding: 0 15px;
+        border: 1px solid var(--border-color); border-radius: 10px;
+        background: var(--bg-body); color: var(--text-main); transition: 0.3s;
+    }
+    .input-field:focus { border-color: var(--brand-color); outline: none; }
+    .input-field:disabled { 
+        opacity: 0.7; cursor: default; background: rgba(0,0,0,0.02); border-color: transparent; 
+    }
+
+    /* Buttons */
+    .btn-action {
+        padding: 10px 24px; border-radius: 10px; font-weight: 600; border: none;
+        cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px;
+    }
+    .btn-edit { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border-color); }
+    .btn-edit:hover { border-color: var(--brand-color); color: var(--brand-color); }
+    
+    .btn-save { background: var(--brand-color); color: white; display: none; }
+    .btn-save:hover { background: var(--brand-hover); transform: translateY(-2px); }
+
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="lightbox" id="lightbox" onclick="ProfileApp.closeLightbox()">
+    <div class="lightbox-close">&times;</div>
+    <img id="lightboxImg" src="">
+</div>
+
+<div class="profile-container">
+    
+    <div class="elite-card">
+        <div class="profile-header"></div>
+        
+        <div class="profile-avatar-wrap" onclick="ProfileApp.handleImageClick()">
+            <img src="{{ my_user.user_image or 'https://ui-avatars.com/api/?name=' + my_user.first_name + '&background=random' }}" 
+                 class="profile-avatar" id="imgPreview">
+            
+            <div class="avatar-actions" id="avatarActions" onclick="event.stopPropagation()">
+                
+                <label for="fileInput" class="action-circle btn-upload-icon" title="Upload New Photo">
+                    <i class="fas fa-camera"></i>
+                </label>
+                <input type="file" id="fileInput" hidden accept="image/*" onchange="ProfileApp.handleFileUpload()">
+
+                <div class="action-circle btn-delete-icon" onclick="ProfileApp.deleteImage()" title="Remove Photo">
+                    <i class="fas fa-trash-alt"></i>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="identity-info">
+            <div class="user-name">{{ my_user.first_name }} {{ my_user.last_name or '' }}</div>
+            <div class="user-email">{{ my_user.email }}</div>
+            
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+                <div class="stat-badge">
+                    <i class="fas fa-crown"></i> {{ member.membership_type }}
+                </div>
+                <div class="stat-badge" style="background: var(--bg-body); color: var(--text-muted);">
+                    <i class="fas fa-calendar-alt"></i> {{ my_user.creation.strftime('%Y-%m-%d') }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="elite-card">
+        <div class="form-header">
+            <div>
+                <h3 style="margin:0; font-weight: 700;" data-i18n="h_settings">Account Settings</h3>
+                <span style="color: var(--text-muted); font-size: 0.9rem;" data-i18n="sub_settings">Manage your personal data</span>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-action btn-edit" id="btnEdit" onclick="ProfileApp.toggleEditMode(true)">
+                    <i class="fas fa-pen"></i> <span data-i18n="btn_edit">Edit</span>
+                </button>
+                <button class="btn-action btn-save" id="btnSave" onclick="ProfileApp.save()">
+                    <i class="fas fa-check"></i> <span data-i18n="btn_save">Save Changes</span>
+                </button>
+                <button class="btn-action btn-edit" id="btnCancel" onclick="ProfileApp.toggleEditMode(false)" style="display:none; color:#EF4444; border-color:#EF4444;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="form-body">
+            <div id="msgBox" style="display:none; padding:15px; margin-bottom:20px; border-radius:10px;"></div>
+
+            <div class="input-group-grid">
+                <div>
+                    <label class="input-label" data-i18n="lbl_fname">First Name</label>
+                    <input type="text" id="first_name" class="input-field editable" value="{{ my_user.first_name }}" disabled>
+                </div>
+                <div>
+                    <label class="input-label" data-i18n="lbl_lname">Last Name</label>
+                    <input type="text" id="last_name" class="input-field editable" value="{{ my_user.last_name or '' }}" disabled>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label class="input-label" data-i18n="lbl_email">Email Address</label>
+                <input type="text" class="input-field" value="{{ my_user.email }}" disabled title="Cannot change email">
+            </div>
+
+            <div style="margin-bottom: 30px;">
+                <label class="input-label" data-i18n="lbl_bio">Bio / About</label>
+                <textarea id="bio" class="input-field editable" style="height: 100px; padding: 15px;" disabled>{{ my_user.bio or '' }}</textarea>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+    const ProfileApp = {
+        isEditing: false,
+        
+        dict: {
+            'en': {
+                'h_settings': 'Account Settings', 'sub_settings': 'Manage your personal data',
+                'lbl_fname': 'First Name', 'lbl_lname': 'Last Name',
+                'lbl_email': 'Email Address', 'lbl_bio': 'Bio / About',
+                'btn_edit': 'Edit Profile', 'btn_save': 'Save Changes',
+                'msg_saved': 'Profile updated successfully!', 'msg_upload_ok': 'Image uploaded!',
+                'msg_deleted': 'Image removed'
+            },
+            'ar': {
+                'h_settings': 'إعدادات الحساب', 'sub_settings': 'إدارة بياناتك الشخصية',
+                'lbl_fname': 'الاسم الأول', 'lbl_lname': 'اسم العائلة',
+                'lbl_email': 'البريد الإلكتروني', 'lbl_bio': 'نبذة عني',
+                'btn_edit': 'تعديل الملف', 'btn_save': 'حفظ التغييرات',
+                'msg_saved': 'تم تحديث البيانات بنجاح!', 'msg_upload_ok': 'تم رفع الصورة!',
+                'msg_deleted': 'تم حذف الصورة'
+            }
+        },
+
+        init() {
+            this.applyLocalTranslations();
+            window.addEventListener('lms-ui-update', (e) => this.applyLocalTranslations(e.detail.lang));
+        },
+
+        // --- UI MODES ---
+        toggleEditMode(enable) {
+            this.isEditing = enable;
+            
+            // Toggle Inputs
+            document.querySelectorAll('.editable').forEach(el => el.disabled = !enable);
+            
+            // Toggle Buttons
+            document.getElementById('btnEdit').style.display = enable ? 'none' : 'flex';
+            document.getElementById('btnSave').style.display = enable ? 'flex' : 'none';
+            document.getElementById('btnCancel').style.display = enable ? 'flex' : 'none';
+            
+            // Toggle Image Actions Overlay
+            document.getElementById('avatarActions').style.display = enable ? 'flex' : 'none';
+            
+            if(enable) document.getElementById('first_name').focus();
+        },
+
+        // --- LIGHTBOX LOGIC ---
+        handleImageClick() {
+            // Only open lightbox if NOT editing
+            if (!this.isEditing) {
+                const src = document.getElementById('imgPreview').src;
+                document.getElementById('lightboxImg').src = src;
+                document.getElementById('lightbox').style.display = 'flex';
+            }
+        },
+
+        closeLightbox() {
+            document.getElementById('lightbox').style.display = 'none';
+        },
+
+        // --- IMAGE ACTIONS ---
+        async handleFileUpload() {
+            const fileInput = document.getElementById('fileInput');
+            if(fileInput.files.length === 0) return;
+
+            const file = fileInput.files[0];
+            
+            // Preview
+            const reader = new FileReader();
+            reader.onload = (e) => document.getElementById('imgPreview').src = e.target.result;
+            reader.readAsDataURL(file);
+
+            // Upload
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                this.showMessage('Uploading image...', 'info');
+                const response = await fetch('/api/method/lms_portal.www.my_profile.upload_profile_image', {
+                    method: 'POST',
+                    headers: { 'X-Frappe-CSRF-Token': "{{ frappe.session.csrf_token }}" },
+                    body: formData
+                });
+                if(response.ok) {
+                    this.showMessage(this.getTxt('msg_upload_ok'), 'success');
+                }
+            } catch(e) { this.showMessage('Upload failed', 'error'); }
+        },
+
+        async deleteImage() {
+            if(!confirm("Remove profile photo?")) return;
+            
+            try {
+                const response = await fetch('/api/method/lms_portal.www.my_profile.delete_profile_image', {
+                    method: 'POST',
+                    headers: { 'X-Frappe-CSRF-Token': "{{ frappe.session.csrf_token }}" }
+                });
+
+                if(response.ok) {
+                    this.showMessage(this.getTxt('msg_deleted'), 'success');
+                    // Reset to UI Avatar
+                    const fname = document.getElementById('first_name').value;
+                    document.getElementById('imgPreview').src = 'https://ui-avatars.com/api/?name=' + fname + '&background=random';
+                }
+            } catch(e) {
+                this.showMessage('Error deleting image', 'error');
+            }
+        },
+
+        // --- SAVE LOGIC ---
+        async save() {
+            const btn = document.getElementById('btnSave');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            const fname = document.getElementById('first_name').value;
+            const lname = document.getElementById('last_name').value;
+            const bio = document.getElementById('bio').value;
+
+            try {
+                const formData = new FormData();
+                formData.append('first_name', fname);
+                formData.append('last_name', lname);
+                formData.append('bio', bio);
+                
+                const response = await fetch('/api/method/lms_portal.www.my_profile.update_profile', {
+                    method: 'POST',
+                    headers: { 'X-Frappe-CSRF-Token': "{{ frappe.session.csrf_token }}" },
+                    body: formData
+                });
+
+                if(response.ok) {
+                    this.showMessage(this.getTxt('msg_saved'));
+                    document.querySelector('.user-name').innerText = fname + ' ' + lname;
+                    this.toggleEditMode(false); 
+                } else { throw new Error('Failed'); }
+            } catch(e) {
+                this.showMessage('Error saving data', 'error');
+            }
+            
+            btn.disabled = false; 
+            btn.innerHTML = `<i class="fas fa-check"></i> ${this.getTxt('btn_save')}`;
+        },
+
+        // --- HELPERS ---
+        showMessage(msg, type='success') {
+            const box = document.getElementById('msgBox');
+            box.style.display = 'block'; box.innerText = msg;
+            box.style.background = type === 'success' ? '#DCFCE7' : (type === 'info' ? '#E0F2FE' : '#FEE2E2');
+            box.style.color = type === 'success' ? '#166534' : (type === 'info' ? '#075985' : '#991B1B');
+            setTimeout(() => box.style.display = 'none', 3000);
+        },
+
+        getTxt(key) {
+            const lang = localStorage.getItem('lms_lang') || 'en';
+            return this.dict[lang][key] || key;
+        },
+
+        applyLocalTranslations(lang = null) {
+            const currentLang = lang || localStorage.getItem('lms_lang') || 'en';
+            const texts = this.dict[currentLang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (texts[key]) {
+                    if (el.tagName === 'INPUT') el.placeholder = texts[key];
+                    else if (el.tagName === 'SPAN' || el.tagName === 'LABEL' || el.tagName === 'H3') el.innerText = texts[key];
+                }
+            });
+        }
+    };
+
+    ProfileApp.init();
+</script>
+{% endblock %}
